@@ -3,6 +3,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { ThreadList } from './components/forum/ThreadList';
 import { ThreadView } from './components/forum/ThreadView';
 import { CreateThreadModal } from './components/forum/CreateThreadModal';
+import { AuthProvider } from './context/AuthContext';
 import { api } from './services/api';
 import type { Thread } from './types';
 
@@ -13,10 +14,18 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Retrieve the token from local storage
+    const token = localStorage.getItem('token');
+    setAuthToken(token);
+  }, []);
 
   // Fetch threads when section changes
   useEffect(() => {
     fetchThreads(currentSection);
+    setSelectedThread(null);
   }, [currentSection]);
 
   const fetchThreads = async (section: string) => {
@@ -73,48 +82,52 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar 
-        currentSection={currentSection}
-        onSectionChange={setCurrentSection}
-      />
-      <main className="flex-1 p-8 overflow-auto">
-        {selectedThread ? (
-          <ThreadView 
-            thread={selectedThread}
-            onBack={() => setSelectedThread(null)}
-            onReplySubmit={(content) => handleReplySubmit(selectedThread.ID, content)}
-          />
-        ) : (
-          <>
-            <div className="mb-6 flex justify-between items-center">
-              <h2 className="text-2xl text-black font-bold">
-                {currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}
-              </h2>
-              <button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                New Thread
-              </button>
-            </div>
-            <ThreadList 
-              threads={threads}
-              isLoading={isLoading}
-              onThreadClick={handleThreadClick}
+    <AuthProvider>
+      <div className="flex h-screen bg-gray-100">
+        <Sidebar 
+          currentSection={currentSection}
+          onSectionChange={setCurrentSection}
+        />
+        <main className="flex-1 p-8 overflow-auto">
+          {selectedThread ? (
+            <ThreadView 
+              thread={selectedThread}
+              onBack={() => setSelectedThread(null)}
+              onReplySubmit={(content) => handleReplySubmit(selectedThread.ID, content)}
             />
-          </>
-        )}
+          ) : (
+            <>
+              <div className="mb-6 flex justify-between items-center">
+                <h2 className="text-2xl text-black font-bold">
+                  {currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}
+                </h2>
+                <button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  New Thread
+                </button>
+              </div>
+              <ThreadList 
+                threads={threads}
+                isLoading={isLoading}
+                onThreadClick={handleThreadClick}
+                setIsCreateModalOpen={setIsCreateModalOpen}
+                authToken={authToken}
+              />
+            </>
+          )}
 
-        {isCreateModalOpen && (
-          <CreateThreadModal
-            section={currentSection}
-            onClose={() => setIsCreateModalOpen(false)}
-            onThreadCreated={handleThreadCreated}
-          />
-        )}
-      </main>
-    </div>
+          {isCreateModalOpen && (
+            <CreateThreadModal
+              section={currentSection}
+              onClose={() => setIsCreateModalOpen(false)}
+              onThreadCreated={handleThreadCreated}
+            />
+          )}
+        </main>
+      </div>
+    </AuthProvider>
   );
 }
 

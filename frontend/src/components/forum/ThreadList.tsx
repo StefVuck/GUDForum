@@ -5,9 +5,11 @@ type ThreadListProps = {
   threads: Thread[];
   isLoading?: boolean;
   onThreadClick: (threadId: number) => void;
+  setIsCreateModalOpen: (isOpen: boolean) => void;
+  authToken: string | null;
 }
 
-export const ThreadList = ({ threads, isLoading, onThreadClick }: ThreadListProps) => {
+export const ThreadList = ({ threads, isLoading, onThreadClick, setIsCreateModalOpen, authToken }: ThreadListProps) => {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -25,7 +27,13 @@ export const ThreadList = ({ threads, isLoading, onThreadClick }: ThreadListProp
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow">
         <p className="text-gray-500">No threads in this section yet.</p>
-        <button className="mt-4 text-blue-500 hover:text-blue-600">
+        <button 
+          className="mt-4 text-blue-500 hover:text-blue-600"
+          onClick={() => {
+            setIsCreateModalOpen(true);
+            console.log('Auth Token:', authToken);
+          }}
+        >
           Create the first thread
         </button>
       </div>

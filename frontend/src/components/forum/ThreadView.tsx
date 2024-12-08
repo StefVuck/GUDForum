@@ -15,14 +15,14 @@ export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) =
     <div className="space-y-6">
       <button 
         onClick={onBack}
-        className="flex items-center text-black hover:text-gray-900"
+        className="flex items-center text-white hover:text-red-600"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to threads
       </button>
 
       <div className="bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-2">{thread.title}</h1>
+        <h1 className="text-2xl text-black font-bold mb-2">{thread.title}</h1>
         
         <div className="flex items-center text-sm text-gray-700 mb-6">
           <span className="flex items-center mr-4">
@@ -34,7 +34,7 @@ export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) =
 
         <MarkdownContent 
           content={thread.content}
-          className="mt-4"
+          className="mt-4 text-black"
         />
       </div>
 
