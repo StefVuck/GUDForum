@@ -88,7 +88,7 @@ function App() {
         ) : (
           <>
             <div className="mb-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl text-black font-bold">
                 {currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}
               </h2>
               <button 

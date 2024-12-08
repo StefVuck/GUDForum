@@ -13,11 +13,16 @@
     "@novu/node": "^2.0.5",
     "@novu/notification-center": "^2.0.0",
     "@radix-ui/react-dialog": "^1.1.2",
+    "@uiw/react-md-editor": "^4.0.4",
     "autoprefixer": "^10.4.20",
     "lucide-react": "^0.468.0",
     "postcss": "^8.4.49",
+    "prismjs": "^1.29.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
+    "rehype-highlight": "^7.0.1",
+    "rehype-raw": "^7.0.0",
     "tailwindcss": "^3.4.16"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import MDEditor from '@uiw/react-md-editor';
 
 type CreateThreadModalProps = {
   section: string;
@@ -46,7 +47,7 @@ export const CreateThreadModal = ({ section, onClose, onThreadCreated }: CreateT
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
@@ -81,14 +82,17 @@ export const CreateThreadModal = ({ section, onClose, onThreadCreated }: CreateT
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Content
               </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                rows={6}
-                placeholder="Write your thread content here..."
-                required
-              />
+              <div data-color-mode="light">
+                <MDEditor
+                  value={content}
+                  onChange={(val) => setContent(val || '')}
+                  preview="edit"
+                  height={300}
+                />
+              </div>
+              <div className="mt-2 text-sm text-gray-500">
+                Supports Markdown formatting. You can use **bold**, *italic*, [links](url), and more.
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3">

@@ -71,3 +71,88 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+.prose {
+  color: black;
+  max-width: none;
+}
+
+.prose code {
+  background-color: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.prose pre {
+  background-color: #f3f4f6;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5em;
+}
+
+.prose blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  color: #6b7280;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em;
+}
+
+/* Add to your index.css or equivalent */
+.prose-sm {
+  font-size: 0.875rem;
+}
+
+.prose-sm * {
+  margin: 0.5em 0;
+}
+
+.prose-sm p:first-child {
+  margin-top: 0;
+}
+
+.prose-sm p:last-child {
+  margin-bottom: 0;
+}
+
+/* Reduce heading sizes in preview */
+.prose-sm h1 {
+  font-size: 1.2em;
+}
+
+.prose-sm h2 {
+  font-size: 1.1em;
+}
+
+.prose-sm h3 {
+  font-size: 1em;
+}
+
+/* Compact lists in preview */
+.prose-sm ul, 
+.prose-sm ol {
+  padding-left: 1.5em;
+}
+
+/* Compact code blocks in preview */
+.prose-sm pre {
+  padding: 0.5em;
+  margin: 0.5em 0;
+}

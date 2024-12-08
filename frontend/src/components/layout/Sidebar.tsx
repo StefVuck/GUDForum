@@ -17,7 +17,7 @@ export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
   return (
     <div className="w-64 bg-white shadow-lg h-full">
       <div className="p-4">
-        <h1 className="text-xl font-bold mb-4">GU Drones Forum</h1>
+        <h1 className="text-xl text-black font-bold mb-4">GU Drones Forum</h1>
         <nav>
           {sections.map(section => {
             const Icon = section.icon
