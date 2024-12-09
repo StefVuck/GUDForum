@@ -83,12 +83,12 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen w-screen bg-gray-100">
         <Sidebar 
           currentSection={currentSection}
           onSectionChange={setCurrentSection}
         />
-        <main className="flex-1 p-8 overflow-auto">
+        <main className="flex-1 h-full p-8 overflow-auto">
           {selectedThread ? (
             <ThreadView 
               thread={selectedThread}
