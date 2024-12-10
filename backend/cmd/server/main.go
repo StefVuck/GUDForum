@@ -157,8 +157,23 @@ func main() {
 }
 
 func getUserIdFromToken(c *gin.Context) uint {
-	// Implement logic to extract user ID from token
-	return 0 // Placeholder return
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return 1 // or handle the error later
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	claims := &auth.Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return auth.JwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		return 1 // or handle the error later
+	}
+
+	return claims.UserID // Return the user ID from the claims
 }
 
 func handleLogin(db *gorm.DB) gin.HandlerFunc {

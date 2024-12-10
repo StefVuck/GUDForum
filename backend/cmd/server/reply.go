@@ -44,15 +44,10 @@ func createReply(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// For development, use the first user in the database
-		var user User
-		if err := db.First(&user).Error; err != nil {
-			c.JSON(500, gin.H{"error": "No users found"})
-			return
-		}
-
+		// Get user ID from token
+		userID := getUserIdFromToken(c) // Assuming this function extracts the user ID from the token
 		reply.ThreadID = threadID
-		reply.UserID = user.ID // Use the found user's ID
+		reply.UserID = userID // Use the user ID from the token
 
 		if err := db.Create(&reply).Error; err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})

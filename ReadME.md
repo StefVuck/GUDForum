@@ -191,12 +191,17 @@ func getUserProfile(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Validate the input parameters
-		// ...
+		userID := getUserIdFromToken(c)
+
+		// Validate the user ID
+		if userID == 0 {
+			c.JSON(400, gin.H{"error": "Invalid user ID"})
+			return
+		}
 
 		// Query the database to retrieve the user's profile information
 		var user User
-		if err := db.First(&user, input.UserID).Error; err != nil {
+		if err := db.First(&user, userID).Error; err != nil {
 			c.JSON(404, gin.H{"error": "User not found"})
 			return
 		}
@@ -271,7 +276,6 @@ Example in Go:
 func updateUserProfile(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
-			UserID uint `json:"user_id" binding:"required"`
 			Name   string `json:"name" binding:"required"`
 			Email  string `json:"email" binding:"required"`
 			Bio    string `json:"bio" binding:"required"`
@@ -282,12 +286,18 @@ func updateUserProfile(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Validate the input parameters
-		// ...
+		userID := getUserIdFromToken(c)
+
+		// Validate the user ID
+		if userID == 0 {
+			c.JSON(400, gin.H{"error": "Invalid user ID"})
+			return
+		}
+
 
 		// Query the database to update the user's profile information
 		var user User
-		if err := db.First(&user, input.UserID).Error; err != nil {
+		if err := db.First(&user, userID).Error; err != nil {
 			c.JSON(404, gin.H{"error": "User not found"})
 			return
 		}
