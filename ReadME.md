@@ -209,7 +209,7 @@ To extend routes in the backend API, you can follow these general steps:
 
 ### Extending Existing GET Routes
 
-To extend the `getUserProfile` route, you can add additional query parameters or modify the database query to include more data. The pseudocode structure for this extension would be:
+To create the `getUserProfile` route, you can add additional query parameters or modify the database query to include more data. The pseudocode structure for this extension would be:
 
 Backend:
 * Define the input parameters for the route (e.g. user ID, query parameters)
@@ -300,9 +300,9 @@ export const api = {
 
 
 
-### Extending Existing POST Routes
+### Extending Existing POST/PUT Routes
 
-To extend the `updateUserProfile` route, you can modify the database query to update the user's profile information with additional data. The pseudocode structure for this extension would be:
+To create the `updateUserProfile` route, you can modify the database query to update the user's profile information with additional data. The pseudocode structure for this extension would be:
 
 Backend:
 * Define the input parameters for the route (e.g. user ID, updated profile information)
