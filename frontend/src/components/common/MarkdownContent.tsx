@@ -19,11 +19,11 @@ export const MarkdownContent = ({ content, className = '' }: MarkdownContentProp
           h1: ({ children }) => <h1 className="text-2xl font-bold mb-4">{children}</h1>,
           h2: ({ children }) => <h2 className="text-xl font-bold mb-3">{children}</h2>,
           h3: ({ children }) => <h3 className="text-lg font-bold mb-2">{children}</h3>,
-          a: ({ href, children }) => (
-            <a href={href} className="text-blue-600 hover:text-blue-800" target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({ children }) => {
+            return (
+              <span className="text-blue-600 hover:text-blue-800">{children}</span>
+            );
+          },
           code: ({ node, inline, className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || '');
             return !inline && match ? (
