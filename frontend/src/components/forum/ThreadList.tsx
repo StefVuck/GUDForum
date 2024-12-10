@@ -1,5 +1,6 @@
 import type { Thread } from '../../types'
 import { ThreadCard } from './ThreadCard'
+import { Link } from 'react-router-dom'
 
 type ThreadListProps = {
   threads: Thread[];
@@ -43,11 +44,12 @@ export const ThreadList = ({ threads, isLoading, onThreadClick, setIsCreateModal
   return (
     <div className="space-y-4">
       {threads.map((thread) => (
-        <ThreadCard 
-          key={`thread-${thread.ID}`}  // Using the ID from gorm.Model
-          thread={thread}
-          onThreadClick={onThreadClick}
-        />
+        <Link to={`/thread/${thread.ID}`} key={`thread-${thread.ID}`}>
+          <ThreadCard 
+            thread={thread}
+            onThreadClick={onThreadClick}
+          />
+        </Link>
       ))}
     </div>
   );

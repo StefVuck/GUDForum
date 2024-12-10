@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MessageCircle, Users, PlaneTakeoff, Wrench, Code } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AuthModal } from '../auth/AuthModal';
+import { useNavigate } from 'react-router-dom';
 
 type SidebarProps = {
   currentSection: string;
@@ -11,6 +12,7 @@ type SidebarProps = {
 export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
   const { user, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const navigate = useNavigate();
 
   const sections = [
     { id: 'general', name: 'General Discussion', icon: MessageCircle },
@@ -20,11 +22,15 @@ export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
     { id: 'software', name: 'Software Development', icon: Code }
   ];
 
+  const handleSectionChange = (section: string) => {
+    onSectionChange(section);
+    navigate(`/${section}`);
+  };
+
   return (
     <div className="w-64 bg-white shadow-lg h-full">
-
       <div className="p-4">
-      <h1 className="text-xl text-black font-bold mb-4">GU Drones Forum</h1>
+        <h1 className="text-xl text-black font-bold mb-4">GU Drones Forum</h1>
         {/* Auth Section */}
         <div className="mb-6">
           {user ? (
@@ -55,7 +61,7 @@ export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
             return (
               <button
                 key={section.id}
-                onClick={() => onSectionChange(section.id)}
+                onClick={() => handleSectionChange(section.id)}
                 className={`w-full flex items-center p-2 mb-2 rounded ${
                   currentSection === section.id ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-700'
                 }`}

@@ -2,19 +2,27 @@ import { ArrowLeft, Clock } from 'lucide-react'
 import type { Thread } from '../../types'
 import { ReplySection } from './ReplySection'
 import { MarkdownContent } from '../common/MarkdownContent'
+import { useNavigate } from 'react-router-dom'
 
 type ThreadViewProps = {
-  thread: Thread;
+  thread: Thread | null;
   onBack: () => void;
   onReplySubmit: (content: string) => void;
 }
 
 export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) => {
-  console.log('thread', thread)
+  const navigate = useNavigate()
+
+  if (!thread) {
+    return <div>No thread selected.</div>;
+  }
+
+  console.log('Thread data:', thread);
+
   return (
     <div className="space-y-6">
       <button 
-        onClick={onBack}
+        onClick={() => navigate(-1)}
         className="flex items-center text-white hover:text-red-600"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -27,9 +35,9 @@ export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) =
         <div className="flex items-center text-sm text-gray-700 mb-6">
           <span className="flex items-center mr-4">
             <Clock className="w-4 h-4 mr-1" />
-            {new Date(thread.createdAt).toLocaleDateString()}
+            {thread.CreatedAt ? new Date(thread.CreatedAt).toLocaleString() : 'Date not available'}
           </span>
-          <span>by {thread.author}</span>
+          <span>by {thread.User && thread.User.name ? thread.User.name : 'Unknown Author'}</span>
         </div>
 
         <MarkdownContent 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { ThreadList } from './components/forum/ThreadList';
 import { ThreadView } from './components/forum/ThreadView';
@@ -15,6 +16,15 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
+
+
+  const sections = [
+    { id: 'general' },
+    { id: 'team' },
+    { id: 'design' },
+    { id: 'electronics' },
+    { id: 'software' },
+  ];
 
   useEffect(() => {
     // Retrieve the token from local storage
@@ -83,50 +93,47 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="flex h-screen w-screen bg-gray-100">
-        <Sidebar 
-          currentSection={currentSection}
-          onSectionChange={setCurrentSection}
-        />
-        <main className="flex-1 h-full p-8 overflow-auto">
-          {selectedThread ? (
-            <ThreadView 
-              thread={selectedThread}
-              onBack={() => setSelectedThread(null)}
-              onReplySubmit={(content) => handleReplySubmit(selectedThread.ID, content)}
-            />
-          ) : (
-            <>
-              <div className="mb-6 flex justify-between items-center">
-                <h2 className="text-2xl text-black font-bold">
-                  {currentSection.charAt(0).toUpperCase() + currentSection.slice(1)}
-                </h2>
-                <button 
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  New Thread
-                </button>
-              </div>
-              <ThreadList 
+      <Router>
+        <div className="flex h-screen w-screen bg-gray-100">
+          <Sidebar 
+            currentSection={currentSection}
+            onSectionChange={setCurrentSection}
+          />
+          <main className="flex-1 h-full p-8 overflow-auto">
+            <Routes>
+              <Route path="/" element={<ThreadList 
                 threads={threads}
                 isLoading={isLoading}
                 onThreadClick={handleThreadClick}
                 setIsCreateModalOpen={setIsCreateModalOpen}
                 authToken={authToken}
-              />
-            </>
-          )}
+              />} />
+              {sections.map(section => (
+                <Route key={section.id} path={`/${section.id}`} element={<ThreadList 
+                  threads={threads}
+                  isLoading={isLoading}
+                  onThreadClick={handleThreadClick}
+                  setIsCreateModalOpen={setIsCreateModalOpen}
+                  authToken={authToken}
+                />} />
+              ))}
+              <Route path="/thread/:id" element={<ThreadView 
+                thread={selectedThread}
+                onBack={() => setSelectedThread(null)}
+                onReplySubmit={(content) => handleReplySubmit(selectedThread.ID, content)}
+              />} />
+            </Routes>
 
-          {isCreateModalOpen && (
-            <CreateThreadModal
-              section={currentSection}
-              onClose={() => setIsCreateModalOpen(false)}
-              onThreadCreated={handleThreadCreated}
-            />
-          )}
-        </main>
-      </div>
+            {isCreateModalOpen && (
+              <CreateThreadModal
+                section={currentSection}
+                onClose={() => setIsCreateModalOpen(false)}
+                onThreadCreated={handleThreadCreated}
+              />
+            )}
+          </main>
+        </div>
+      </Router>
     </AuthProvider>
   );
 }
