@@ -16,6 +16,51 @@ In `backend` you should run:
 go run cmd/server/*.go
 ```
 
+### Database Guide 
+Setting Up a PostgreSQL Database for the Forum Application
+This guide will help you set up a PostgreSQL database on Windows, macOS, and Linux to work with the forum application.
+Prerequisites
+- Ensure you have Go installed on your machine.
+- Install PostgreSQL on your system.
+### Step 1: Install PostgreSQL
+#### Windows
+1. Download the PostgreSQL installer from the official website.
+2. Run the installer and follow the prompts to install PostgreSQL.
+3. During installation, set a password for the postgres user and remember it.
+
+#### macOS
+1. You can install PostgreSQL using Homebrew. Open your terminal and run:
+`brew install postgresql`
+2. After installation, start the PostgreSQL service:
+`brew services start postgresql`
+
+#### Linux
+For Debian-based distributions (like Ubuntu), run:
+```bash
+   sudo apt update
+   sudo apt install postgresql postgresql-contrib
+```
+2. For Red Hat-based distributions (like CentOS), run:
+```bash
+   sudo yum install postgresql-server postgresql-contrib
+```
+3. After installation, initialize the database and start the service:
+```bash
+   sudo service postgresql start
+```
+### Step 2: Create a Database and User
+Open the PostgreSQL command line interface (psql) as the postgres user:
+`psql -U postgres`
+You may need to enter the password you set during installation.
+Create a new database for the forum application:
+`   CREATE DATABASE drones_forum;`
+3. Create a new user with a password:
+`   CREATE USER forumuser WITH PASSWORD 'yourpassword';`
+4. Grant the user access to the database:
+`   GRANT ALL PRIVILEGES ON DATABASE drones_forum TO forumuser;`
+Exit the psql interface:
+`   \q`
+
 ## Structure
 The full repo structure at the moment of writing is:
 ```
@@ -352,10 +397,6 @@ export const api = {
   },
 };
 ```
-
-
-
-
 
 ## To-Do List:
 
