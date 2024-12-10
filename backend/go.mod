@@ -1,4 +1,4 @@
-module github.com/yourusername/forum
+module github.com/stefvuck/forum
 
 go 1.23.3
 
