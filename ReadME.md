@@ -16,6 +16,9 @@ In `backend` you should run:
 go run cmd/server/*.go
 ```
 
+### Extra Export
+`export JWT_SECRET="your-secure-secret-key"`
+
 ### Database Guide 
 Setting Up a PostgreSQL Database for the Forum Application
 This guide will help you set up a PostgreSQL database on Windows, macOS, and Linux to work with the forum application.
