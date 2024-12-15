@@ -1,10 +1,11 @@
 package main
 
 import (
-	"bytes"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
-	"io"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,12 +19,15 @@ import (
 // User model represents a user in the system
 type User struct {
 	gorm.Model
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Password string `json:"-"`
-	Role     string `json:"role"`
-	Threads  []Thread
-	Replies  []Reply
+	Email         string    `json:"email"`
+	Name          string    `json:"name"`
+	Password      string    `json:"-"` // Renamed from HashedPassword for compatibility
+	Role          string    `json:"role"`
+	Verified      bool      `json:"verified"`
+	VerifyToken   string    `json:"-"`
+	VerifyExpires time.Time `json:"-"`
+	Threads       []Thread
+	Replies       []Reply
 }
 
 // TODO:
@@ -135,6 +139,7 @@ func main() {
 		{
 			auth.POST("/login", handleLogin(db))
 			auth.POST("/register", handleRegister(db))
+			auth.GET("/verify", handleVerifyEmail(db))
 		}
 
 		// Protected routes
@@ -176,6 +181,63 @@ func getUserIdFromToken(c *gin.Context) uint {
 	return claims.UserID // Return the user ID from the claims
 }
 
+func handleRegister(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var input struct {
+			Email    string `json:"email" binding:"required,email"`
+			Password string `json:"password" binding:"required,min=8"`
+			Name     string `json:"name" binding:"required"`
+		}
+
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+
+		if !strings.HasSuffix(input.Email, "@student.gla.ac.uk") {
+			c.JSON(400, gin.H{"error": "Must use a Glasgow University email"})
+			return
+		}
+
+		// Hash password
+		hashedPassword, err := auth.HashPassword(input.Password)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to process password"})
+			return
+		}
+
+		// Generate verification token
+		verifyToken := make([]byte, 32)
+		if _, err := rand.Read(verifyToken); err != nil {
+			c.JSON(500, gin.H{"error": "Failed to generate verification token"})
+			return
+		}
+		token := base64.URLEncoding.EncodeToString(verifyToken)
+
+		user := User{
+			Email:         input.Email,
+			Name:          input.Name,
+			Password:      hashedPassword,
+			Role:          "member",
+			Verified:      false,
+			VerifyToken:   token,
+			VerifyExpires: time.Now().Add(48 * time.Hour),
+		}
+
+		if err := db.Create(&user).Error; err != nil {
+			c.JSON(400, gin.H{"error": "Email already registered"})
+			return
+		}
+
+		// TODO: Send verification email
+		// For development, return the verification token
+		c.JSON(201, gin.H{
+			"message":      "Registration successful. Please check your email to verify your account.",
+			"verify_token": token, // Remove this in production
+		})
+	}
+}
+
 func handleLogin(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
@@ -194,7 +256,16 @@ func handleLogin(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// For now, accept any password (for development)
+		if !user.Verified {
+			c.JSON(403, gin.H{"error": "Please verify your email before logging in"})
+			return
+		}
+
+		if !auth.CheckPasswordHash(input.Password, user.Password) {
+			c.JSON(401, gin.H{"error": "Invalid credentials"})
+			return
+		}
+
 		token, err := auth.GenerateToken(user.ID, user.Email)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Failed to generate token"})
@@ -213,67 +284,32 @@ func handleLogin(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Handle user registration
-func handleRegister(db *gorm.DB) gin.HandlerFunc {
+func handleVerifyEmail(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Read the raw body
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Failed to read request body"})
-			return
-		}
-		// Log the raw body
-		fmt.Println("Raw request body:", string(body))
-
-		// Reset the body so it can be read again
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		var input struct {
-			Email    string `json:"email" binding:"required,email"`
-			Password string `json:"password" binding:"required"`
-			Name     string `json:"name" binding:"required"`
-		}
-
-		if err := c.ShouldBindJSON(&input); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+		token := c.Query("token")
+		if token == "" {
+			c.JSON(400, gin.H{"error": "Verification token required"})
 			return
 		}
 
-		if !strings.HasSuffix(input.Email, "@glasgow.ac.uk") {
-			c.JSON(400, gin.H{"error": "Must use a Glasgow University email"})
+		var user User
+		result := db.Where("verify_token = ? AND verify_expires > ?", token, time.Now()).First(&user)
+		if result.Error != nil {
+			c.JSON(400, gin.H{"error": "Invalid or expired verification token"})
 			return
 		}
 
-		user := User{
-			Email: input.Email,
-			Name:  input.Name,
-			Role:  "member",
-		}
-
-		if err := db.Create(&user).Error; err != nil {
-			c.JSON(400, gin.H{"error": "Email already registered"})
+		user.Verified = true
+		user.VerifyToken = "" // Clear the token
+		if err := db.Save(&user).Error; err != nil {
+			c.JSON(500, gin.H{"error": "Failed to verify email"})
 			return
 		}
 
-		token, err := auth.GenerateToken(user.ID, user.Email)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Failed to generate token"})
-			return
-		}
-
-		c.JSON(201, gin.H{
-			"token": token,
-			"user": gin.H{
-				"id":    user.ID,
-				"email": user.Email,
-				"name":  user.Name,
-				"role":  user.Role,
-			},
-		})
+		c.JSON(200, gin.H{"message": "Email verified successfully"})
 	}
 }
 
-// Add this middleware function
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")

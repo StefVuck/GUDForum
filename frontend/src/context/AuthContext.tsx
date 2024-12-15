@@ -1,5 +1,7 @@
+// AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
+
 type User = {
   id: number;
   email: string;
@@ -7,16 +9,20 @@ type User = {
   role: string;
 };
 
+type RegisterResponse = {
+  message: string;
+  verify_token: string;
+};
+
 type AuthContextType = {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  register: (email: string, password: string, name: string) => Promise<RegisterResponse>;
+  verifyEmail: (token: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 };
-
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -26,7 +32,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for stored token on startup
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
@@ -46,6 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('user', JSON.stringify(data.user));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to login');
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -55,13 +61,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await api.register(email, password, name);
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const response = await api.register(email, password, name);
+      return response; // Return the full response object
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to register');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmail = async (token: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await api.verifyEmail(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to verify email');
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +92,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading, error }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      register, 
+      verifyEmail,
+      logout, 
+      isLoading, 
+      error 
+    }}>
       {children}
     </AuthContext.Provider>
   );

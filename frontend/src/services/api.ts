@@ -1,5 +1,21 @@
 const API_URL = 'http://localhost:8080/api';
 
+type LoginResponse = {
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+    verified: boolean;
+  };
+};
+
+type RegisterResponse = {
+  message: string;
+  verify_token?: string; // Only in development
+};
+
 // Helper function for common fetch options
 const fetchApi = async (endpoint: string, options?: RequestInit) => {
   // Retrieve the token from local storage or wherever you store it
@@ -48,33 +64,56 @@ export const api = {
       body: JSON.stringify({ content }),
     }),
 
-  // Login user
-  login: async (email: string, password: string) => {
-    const response = await fetchApi('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-
-    // Store the token in local storage
-    localStorage.setItem('token', response.token); // Adjust based on your response structure
-
-    return response;
-  },
-
-  // Register user
-  register: async (email: string, password: string, name: string) => {
-    try {
-      const response = fetchApi('/auth/register', {
+    login: async (email: string, password: string): Promise<LoginResponse> => {
+      const response = await fetchApi('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password }),
       });
-      // Store the token in local storage
-      localStorage.setItem('token', response.token); // Adjust based on your response structure
-      console.log("Registration Success")
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error; // Rethrow the error if you want to handle it further up
+  
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+  
+      return response;
+    },
+  
+    register: async (email: string, password: string, name: string) => {
+      try {
+        console.log('Sending registration request:', { email, name });
+        
+        const response = await fetch(`${API_URL}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password, name }),
+        });
+  
+        const data = await response.json();
+        console.log('Raw backend response:', data);
+  
+        if (!response.ok) {
+          throw new Error(data.error || `API Error: ${response.statusText}`);
+        }
+  
+        // Check if we actually got a verification token
+        if (!data.verify_token) {
+          console.warn('No verification token in response:', data);
+        }
+  
+        return data;
+      } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+      }
+    },
+
+
+    verifyEmail: async (token: string) => {
+      if (!token) {
+        throw new Error('Verification token is required');
+      }
+      return fetchApi(`/auth/verify?token=${token}`);
     }
-  },
 };
 
