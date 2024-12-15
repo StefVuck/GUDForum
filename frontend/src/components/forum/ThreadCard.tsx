@@ -30,14 +30,14 @@ export const ThreadCard = ({ thread, onThreadClick }: ThreadCardProps) => {
         <div className="flex items-center space-x-4">
           <span className="flex items-center">
             <MessageCircle className="w-4 h-4 mr-1" />
-            {thread.Replies?.length || 0} replies
+            {thread.replies?.length || 0} replies
           </span>
           <span className="flex items-center">
             <Clock className="w-4 h-4 mr-1" />
-            {new Date(thread.CreatedAt).toLocaleDateString()}
+            {new Date(thread.CreatedAt).toLocaleDateString()} {/* CreatedAt is caps because default gorm param*/}
           </span>
         </div>
-        <span>by {thread.User?.name || 'Anonymous'}</span>
+        <span>by {thread.user?.name || 'Anonymous'}</span>
       </div>
     </div>
   );

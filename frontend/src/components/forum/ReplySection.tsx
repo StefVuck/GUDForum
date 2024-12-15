@@ -21,19 +21,19 @@ export const ReplySection = ({ thread, onReplySubmit }: ReplySectionProps) => {
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold mb-4 text-black flex items-center">
         <MessageCircle className="w-5 h-5 mr-2" />
-        Replies ({thread.Replies?.length || 0})
+        Replies ({thread.replies?.length || 0})
       </h2>
 
       {/* Existing Replies */}
       <div className="space-y-4 mb-6">
-        {thread.Replies && thread.Replies.length > 0 ? (
-          thread.Replies.map((reply) => (
+        {thread.replies && thread.replies.length > 0 ? (
+          thread.replies.map((reply) => (
             <div key={`reply-${reply.ID}`} className="bg-gray-50 rounded-lg p-4 text-black">
               <div className="flex justify-between items-start mb-2">
-                <span className="font-medium text-black">{reply.User?.name || 'Anonymous'}</span>
+                <span className="font-medium text-black">{reply.user?.name || 'Anonymous'}</span>
                 <span className="text-sm text-gray-500 flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
-                  {new Date(reply.CreatedAt).toLocaleDateString()}
+                  {new Date(reply.CreatedAt).toLocaleString()} {/* CreatedAt is a default param and therefore cap*/}
                 </span>
               </div>
               <p className="text-black whitespace-pre-wrap">{reply.content}</p>

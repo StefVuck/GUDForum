@@ -37,7 +37,7 @@ export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) =
             <Clock className="w-4 h-4 mr-1" />
             {thread.CreatedAt ? new Date(thread.CreatedAt).toLocaleString() : 'Date not available'}
           </span>
-          <span>by {thread.User && thread.User.name ? thread.User.name : 'Unknown Author'}</span>
+          <span>by {thread.user && thread.user.name ? thread.user.name : 'Unknown Author'}</span>
         </div>
 
         <MarkdownContent 

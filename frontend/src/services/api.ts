@@ -108,6 +108,20 @@ export const api = {
       }
     },
 
+    searchThreads: async ({ type, query, section }: { 
+      type: string; 
+      query: string; 
+      section: string;
+    }) => {
+      const params = new URLSearchParams({
+        type,
+        query,
+        section
+      });
+      
+      return fetchApi(`/search?${params.toString()}`);
+    },
+
 
     verifyEmail: async (token: string) => {
       if (!token) {

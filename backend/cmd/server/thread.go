@@ -11,9 +11,11 @@ type Thread struct {
 	Title   string  `json:"title"`
 	Content string  `json:"content"`
 	Section string  `json:"section"`
+	Tags    string  `json:"tags"`  // Comma-separated tags
+	Views   int     `json:"views"` // View count
 	UserID  uint    `json:"user_id"`
-	User    User    `gorm:"foreignKey:UserID"`
-	Replies []Reply `gorm:"foreignKey:ThreadID"`
+	User    User    `json:"user"`
+	Replies []Reply `json:"replies"`
 }
 
 // Get threads by section

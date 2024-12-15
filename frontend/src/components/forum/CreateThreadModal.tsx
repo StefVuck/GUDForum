@@ -70,7 +70,7 @@ export const CreateThreadModal = ({ section, onClose, onThreadCreated }: CreateT
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border rounded bg-gray-200 text-black focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter thread title"
                 required
               />

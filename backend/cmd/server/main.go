@@ -125,7 +125,7 @@ func main() {
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Your Vite dev server
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -154,6 +154,7 @@ func main() {
 			// Reply routes
 			protected.POST("/threads/:id/replies", createReply(db))
 			protected.GET("/threads/:id/replies", getReplies(db))
+			protected.GET("/search", handleSearch(db))
 		}
 	}
 

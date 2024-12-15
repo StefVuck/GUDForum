@@ -17,7 +17,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<Thread[]>(null);
+  const [searchResults, setSearchResults] = useState<Thread[] | null>(null);
 
   const sections = [
     { id: 'general' },
@@ -35,8 +35,10 @@ function App() {
 
   // Fetch threads when section changes
   useEffect(() => {
-    fetchThreads(currentSection);
-    setSelectedThread(null);
+    if (!searchResults) {
+      fetchThreads(currentSection);
+      setSelectedThread(null);
+    }
   }, [currentSection]);
 
   const fetchThreads = async (section: string) => {
@@ -45,6 +47,7 @@ function App() {
       setError(null);
       const data = await api.getThreads(section);
       setThreads(data);
+      setSearchResults(null);
     } catch (err) {
       setError('Failed to load threads');
       console.error('Error fetching threads:', err);
@@ -90,9 +93,9 @@ function App() {
     try {
       setIsLoading(true);
       setError(null);
-      // You'll need to implement this API endpoint
-      const results = await api.searchThreads(criteria);
-      setSearchResults(results);
+      const response = await api.searchThreads(criteria);
+      console.log(response);
+      setSearchResults(response.results);
     } catch (err) {
       setError('Failed to search threads');
       console.error('Error searching threads:', err);
@@ -106,44 +109,69 @@ function App() {
     setIsCreateModalOpen(false);
   };
 
+  // Clear search results when changing sections
+  const handleSectionChange = (section: string) => {
+    setSearchResults(null);
+    setCurrentSection(section);
+  };
+
   return (
     <AuthProvider>
       <Router>
         <div className="flex h-screen w-screen bg-gray-100">
           <Sidebar 
             currentSection={currentSection}
-            onSectionChange={setCurrentSection}
+            onSectionChange={handleSectionChange}
           />
           <div className="flex-1 flex flex-col h-full">
-            <ForumHeader
-              totalThreads={threads.length}
+          <ForumHeader
+              totalThreads={(searchResults || threads).length}
               currentSection={currentSection}
               onSearch={handleSearch}
-            /> 
+              isSearchActive={!!searchResults}
+              onClearSearch={() => {
+                setSearchResults(null);
+                fetchThreads(currentSection);
+              }}
+              setIsCreateModalOpen={setIsCreateModalOpen} 
+            />
             <main className="flex-1 h-full p-8 overflow-auto">
-              <Routes>
-                <Route path="/" element={<ThreadList 
-                  threads={threads}
+            <Routes>
+              <Route path="/" element={
+                <ThreadList 
+                  threads={searchResults || threads}
                   isLoading={isLoading}
                   onThreadClick={handleThreadClick}
                   setIsCreateModalOpen={setIsCreateModalOpen}
                   authToken={authToken}
-                />} />
-                {sections.map(section => (
-                  <Route key={section.id} path={`/${section.id}`} element={<ThreadList 
-                    threads={threads}
-                    isLoading={isLoading}
-                    onThreadClick={handleThreadClick}
-                    setIsCreateModalOpen={setIsCreateModalOpen}
-                    authToken={authToken}
-                  />} />
-                ))}
-                <Route path="/thread/:id" element={<ThreadView 
-                  thread={selectedThread}
-                  onBack={() => setSelectedThread(null)}
-                  onReplySubmit={(content) => handleReplySubmit(selectedThread.ID, content)}
-                />} />
-              </Routes>
+                />
+              } />
+              {sections.map(section => (
+                <Route 
+                  key={section.id} 
+                  path={`/${section.id}`} 
+                  element={
+                    <ThreadList 
+                      threads={searchResults || threads}
+                      isLoading={isLoading}
+                      onThreadClick={handleThreadClick}
+                      setIsCreateModalOpen={setIsCreateModalOpen}
+                      authToken={authToken}
+                    />
+                  }
+                />
+              ))}
+              <Route 
+                path="/thread/:id" 
+                element={
+                  <ThreadView 
+                    thread={selectedThread}
+                    onBack={() => setSelectedThread(null)}
+                    onReplySubmit={(content) => selectedThread && handleReplySubmit(selectedThread.ID, content)}
+                  />
+                } 
+              />
+            </Routes>
 
               {isCreateModalOpen && (
                 <CreateThreadModal
