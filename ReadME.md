@@ -2,7 +2,34 @@
 
 This project is structured into a backend and frontend. The backend is built using Go and Gin framework, handling API requests and database interactions. The frontend is built using a React web framework, handling user interface and client-side logic.
 
-## Running it all
+# Demonstration
+![image](https://github.com/user-attachments/assets/8d4b0faa-2642-4a43-bfec-61a774975893)
+
+## Registration Funcitonality
+![image](https://github.com/user-attachments/assets/52c18330-bcb1-44c7-a1b4-f561775c43f5)
+![image](https://github.com/user-attachments/assets/17b78d11-b523-42df-b5c5-2c546a1cc774)
+
+In production, users must verify their token received in their email in order to register, in addition to this, only users with a valid glasgow student email (@student.gla.ac.uk) can register
+
+## Search Functionality
+#### Basic Search
+![image](https://github.com/user-attachments/assets/136c6eab-12f7-45d3-a75b-a53c61bc4d59)
+
+#### Advanced Search
+![image](https://github.com/user-attachments/assets/42f262f5-1d61-4d8a-9233-c3fae5f7306e)
+![image](https://github.com/user-attachments/assets/83ad7537-877a-47ec-aeb8-f9a54e345dc0)
+
+## Thread Creation
+![image](https://github.com/user-attachments/assets/120973b6-b49f-4369-bc18-4547062b723f)
+![image](https://github.com/user-attachments/assets/28a4f801-f690-4b3a-bdd2-8c10ea80d73c)
+![image](https://github.com/user-attachments/assets/710f6a63-57e6-4ac2-81ed-544d2514b09e)
+![image](https://github.com/user-attachments/assets/209ffaeb-e131-454e-b717-fba55e3b431c)
+
+## Reply Creation
+![image](https://github.com/user-attachments/assets/557e944a-90bf-4624-9eb2-028e7c9205b9)
+
+
+# Running it all
 For now, then easiest way is to start up two terminal windows, one in backend/, one in frontend/
 
 In `frontend` you should run:
@@ -56,15 +83,74 @@ Open the PostgreSQL command line interface (psql) as the postgres user:
 `psql -U postgres`
 You may need to enter the password you set during installation.
 Create a new database for the forum application:
-`   CREATE DATABASE drones_forum;`
-3. Create a new user with a password:
-`   CREATE USER forumuser WITH PASSWORD 'yourpassword';`
-4. Grant the user access to the database:
-`   GRANT ALL PRIVILEGES ON DATABASE drones_forum TO forumuser;`
-Exit the psql interface:
-`   \q`
+```sql
+-- First, disconnect all users and drop the database
+DROP DATABASE IF EXISTS drones_forum;
 
-## Structure
+-- Create the new database
+CREATE DATABASE drones_forum;
+
+-- Create user if not exists
+CREATE USER forumuser WITH PASSWORD 'yourpassword';
+
+-- Grant privileges
+GRANT ALL PRIVILEGES ON DATABASE drones_forum TO forumuser;
+
+-- Connect to the new database and create tables
+\c drones_forum
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'member',
+    verified BOOLEAN DEFAULT FALSE,
+    verify_token VARCHAR(255),
+    verify_expires TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE threads (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    section VARCHAR(50) NOT NULL,
+    tags TEXT,
+    views INTEGER DEFAULT 0,
+    user_id INTEGER REFERENCES users(id)
+);
+
+CREATE TABLE replies (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    content TEXT NOT NULL,
+    thread_id INTEGER REFERENCES threads(id),
+    user_id INTEGER REFERENCES users(id)
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_threads_user_id ON threads(user_id);
+CREATE INDEX idx_replies_thread_id ON replies(thread_id);
+CREATE INDEX idx_replies_user_id ON replies(user_id);
+CREATE INDEX idx_threads_section ON threads(section);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_threads_tags ON threads USING gin(to_tsvector('english', tags));
+CREATE INDEX idx_threads_title ON threads USING gin(to_tsvector('english', title));
+CREATE INDEX idx_threads_content ON threads USING gin(to_tsvector('english', content));
+
+\q
+```
+
+
+## Structure (Outdated post v0.1.0)
 The full repo structure at the moment of writing is:
 ```
 ├── ReadME.md
