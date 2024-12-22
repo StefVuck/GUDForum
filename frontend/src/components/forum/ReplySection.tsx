@@ -30,7 +30,7 @@ export const ReplySection = ({ thread, onReplySubmit }: ReplySectionProps) => {
           thread.replies.map((reply) => (
             <div key={`reply-${reply.ID}`} className="bg-gray-50 rounded-lg p-4 text-black">
               <div className="flex justify-between items-start mb-2">
-                <span className="font-medium text-black">{reply.user?.name || 'Anonymous'}</span>
+                <span className="font-medium text-black">{reply.User?.name || 'Anonymous'}</span>
                 <span className="text-sm text-gray-500 flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
                   {new Date(reply.CreatedAt).toLocaleString()} {/* CreatedAt is a default param and therefore cap*/}

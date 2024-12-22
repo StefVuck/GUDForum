@@ -128,6 +128,28 @@ export const api = {
         throw new Error('Verification token is required');
       }
       return fetchApi(`/auth/verify?token=${token}`);
-    }
+    },
+
+
+    validateToken: async (token: string): Promise<boolean> => {
+      try {
+        const response = await fetch(`${API_URL}/auth/validate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          return false; 
+        }
+
+        return true; 
+      } catch (error) {
+        console.error('Error validating token:', error);
+        return false;
+      }
+    },
 };
 

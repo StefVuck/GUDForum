@@ -64,7 +64,7 @@ export const AuthModal = ({ onClose }: AuthModalProps) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-2xl text-black font-bold">
             {modalState === 'verify' ? 'Verify Email' : 
              modalState === 'login' ? 'Login' : 'Register'}
           </h2>
@@ -96,9 +96,9 @@ export const AuthModal = ({ onClose }: AuthModalProps) => {
           <div className="space-y-4">
             {verificationToken ? (
               <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium mb-2">Development Mode Verification</h3>
+                <h3 className="font-medium text-red-400 mb-2">Development Mode Verification</h3>
                 <p className="text-sm text-gray-600 mb-2">Verification Token:</p>
-                <code className="block p-2 bg-gray-100 rounded text-sm overflow-auto break-all">
+                <code className="block p-2 bg-gray-100 text-black rounded text-sm overflow-auto break-all">
                   {verificationToken}
                 </code>
               </div>

@@ -31,6 +31,24 @@ function App() {
     // Retrieve the token from local storage
     const token = localStorage.getItem('token');
     setAuthToken(token);
+
+    // Validate the token
+    const validateToken = async (token: string | null) => {
+      if (token) {
+        try {
+          const isValid = await api.validateToken(token); // Assume this API call checks token validity
+          if (!isValid) {
+            localStorage.removeItem('token');
+            setAuthToken(null);
+            setError('Session expired. Please log in again.');
+          }
+        } catch (err) {
+          console.error('Error validating token:', err);
+        }
+      }
+    };
+
+    validateToken(token);
   }, []);
 
   // Fetch threads when section changes

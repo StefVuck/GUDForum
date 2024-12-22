@@ -140,6 +140,7 @@ func main() {
 			auth.POST("/login", handleLogin(db))
 			auth.POST("/register", handleRegister(db))
 			auth.GET("/verify", handleVerifyEmail(db))
+			auth.POST("/validate", validateToken)
 		}
 
 		// Protected routes
@@ -337,4 +338,27 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("userEmail", claims.Email)
 		c.Next()
 	}
+}
+
+// ValidateToken checks if the provided token is valid
+func validateToken(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(401, gin.H{"error": "Authorization header required"})
+		return
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	claims := &auth.Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return auth.JwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		c.JSON(401, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	c.JSON(200, gin.H{"valid": true}) // Token is valid
 }
