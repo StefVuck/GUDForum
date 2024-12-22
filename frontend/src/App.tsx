@@ -8,6 +8,11 @@ import { CreateThreadModal } from './components/forum/CreateThreadModal';
 import { AuthProvider } from './context/AuthContext';
 import { api } from './services/api';
 import type { Thread } from './types';
+import { ProfilePage } from './components/forum/ProfilePage';
+import { RequireAuth } from './components/auth/RequireAuth';
+import { AdminRolesPage } from './components/forum/AdminRolesPage';
+import { NotFound } from './components/layout/NotFound';
+
 
 function App() {
   const [currentSection, setCurrentSection] = useState('general');
@@ -189,6 +194,25 @@ function App() {
                   />
                 } 
               />
+
+            <Route 
+                path="/profile" 
+                element={
+                  <RequireAuth>
+                    <ProfilePage />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/admin/roles" 
+                element={
+                  <RequireAuth roles={['admin']}>
+                    <AdminRolesPage />
+                  </RequireAuth>
+                } 
+              />
+
+              <Route path="*" element={<NotFound />} />
             </Routes>
 
               {isCreateModalOpen && (

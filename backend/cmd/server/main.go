@@ -16,13 +16,13 @@ import (
 	"github.com/stefvuck/forum/internal/auth"
 )
 
-// User model represents a user in the system
 type User struct {
 	gorm.Model
 	Email         string    `json:"email"`
 	Name          string    `json:"name"`
-	Password      string    `json:"-"` // Renamed from HashedPassword for compatibility
-	Role          string    `json:"role"`
+	Password      string    `json:"-"`
+	RoleID        uint      `json:"role_id"`
+	Role          Role      `json:"role" gorm:"foreignKey:RoleID"`
 	Verified      bool      `json:"verified"`
 	VerifyToken   string    `json:"-"`
 	VerifyExpires time.Time `json:"-"`
@@ -41,12 +41,34 @@ type User struct {
 
 // Seed the database with initial data
 func seedDatabase(db *gorm.DB) {
+	// First ensure roles exist
+	memberRole := Role{
+		Name:  "member",
+		Color: "#808080",
+		Permissions: map[string]bool{
+			"can_create_threads": true,
+			"can_reply":          true,
+		},
+	}
+
+	// Create the member role if it doesn't exist
+	var existingRole Role
+	if err := db.Where("name = ?", "member").First(&existingRole).Error; err != nil {
+		if err := db.Create(&memberRole).Error; err != nil {
+			fmt.Println("Error creating member role:", err)
+			return
+		}
+	} else {
+		memberRole = existingRole
+	}
+
 	// Create test user
 	user := User{
-		Email: "test@glasgow.ac.uk",
-		Name:  "John Doe",
-		Role:  "member",
+		Email:  "test@glasgow.ac.uk",
+		Name:   "John Doe",
+		RoleID: memberRole.ID, // Use the role ID instead of role name
 	}
+
 	result := db.FirstOrCreate(&user, User{Email: "test@glasgow.ac.uk"})
 	if result.Error != nil {
 		fmt.Println("Error creating user:", result.Error)
@@ -117,6 +139,10 @@ func main() {
 
 	// Auto migrate the schema
 	db.AutoMigrate(&User{}, &Thread{}, &Reply{})
+
+	if err := initializeRoles(db); err != nil {
+		panic("Failed to initialize roles: " + err.Error())
+	}
 	seedDatabase(db)
 
 	// Initialize Gin router
@@ -156,6 +182,12 @@ func main() {
 			protected.POST("/threads/:id/replies", createReply(db))
 			protected.GET("/threads/:id/replies", getReplies(db))
 			protected.GET("/search", handleSearch(db))
+
+			// User and role management routes
+			protected.GET("/profile", getCurrentUserProfile(db))
+			protected.GET("/profile/stats", getCurrentUserStats(db))
+			protected.PATCH("/users/:id/role", updateUserRole(db))
+			protected.GET("/roles", getRoles(db))
 		}
 	}
 
@@ -201,6 +233,13 @@ func handleRegister(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Get the default member role
+		var memberRole Role
+		if err := db.Where("name = ?", "member").First(&memberRole).Error; err != nil {
+			c.JSON(500, gin.H{"error": "Failed to get default role"})
+			return
+		}
+
 		// Hash password
 		hashedPassword, err := auth.HashPassword(input.Password)
 		if err != nil {
@@ -220,7 +259,7 @@ func handleRegister(db *gorm.DB) gin.HandlerFunc {
 			Email:         input.Email,
 			Name:          input.Name,
 			Password:      hashedPassword,
-			Role:          "member",
+			RoleID:        memberRole.ID, // Use the role ID
 			Verified:      false,
 			VerifyToken:   token,
 			VerifyExpires: time.Now().Add(48 * time.Hour),
@@ -232,7 +271,6 @@ func handleRegister(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// TODO: Send verification email
-		// For development, return the verification token
 		c.JSON(201, gin.H{
 			"message":      "Registration successful. Please check your email to verify your account.",
 			"verify_token": token, // Remove this in production

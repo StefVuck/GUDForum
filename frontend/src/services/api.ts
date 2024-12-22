@@ -38,6 +38,32 @@ const fetchApi = async (endpoint: string, options?: RequestInit) => {
 };
 
 export const api = {
+  // User Profile Methods
+  getUserProfile: (userId: number) => 
+    fetchApi(`/users/${userId}`),
+
+  getUserStats: (userId: number) => 
+    fetchApi(`/users/${userId}/stats`),
+
+  // Role Management Methods
+  getRoles: () => 
+    fetchApi('/roles'),
+
+  getUsers: () => 
+    fetchApi('/users'),
+
+  getCurrentUserProfile: () => 
+    fetchApi('/profile'),
+
+  getCurrentUserStats: () => 
+    fetchApi('/profile/stats'),
+
+  updateUserRole: (userId: number, roleId: number) => 
+    fetchApi(`/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ roleId }),
+    }),
+
   // Get all threads for a section
   getThreads: (section: string) => 
     fetchApi(`/sections/${section}/threads`),

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, Users, PlaneTakeoff, Wrench, Code } from 'lucide-react';
+import { MessageCircle, Users, PlaneTakeoff, Wrench, Code, UserCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AuthModal } from '../auth/AuthModal';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ type SidebarProps = {
 export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
   const { user, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
   const sections = [
@@ -27,6 +28,18 @@ export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
     navigate(`/${section}`);
   };
 
+  const navigateToProfile = () => {
+    if (user) {
+      navigate(`/profile`);
+      setShowUserMenu(false);
+    }
+  };
+
+  const navigateToRoleManagement = () => {
+    navigate('/admin/roles');
+    setShowUserMenu(false);
+  };
+
   return (
     <div className="w-64 bg-white shadow-lg h-full">
       <div className="p-4">
@@ -34,15 +47,50 @@ export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
         {/* Auth Section */}
         <div className="mb-6">
           {user ? (
-            <div className="p-3 bg-gray-50 text-black rounded">
-              <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-gray-600">{user.email}</p>
-              <button
-                onClick={logout}
-                className="mt-2 text-sm text-red-600 hover:text-red-800"
+            <div className="relative">
+              <div 
+                className="p-3 bg-gray-50 text-black rounded cursor-pointer hover:bg-gray-100"
+                onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                Logout
-              </button>
+                <p className="font-medium flex items-center gap-2">
+                  <UserCircle className="w-5 h-5" />
+                  {user.name}
+                </p>
+                <p className="text-sm text-gray-600">{user.email}</p>
+              </div>
+              
+              {/* Dropdown Menu */}
+              {showUserMenu && (
+                <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
+                  <button
+                    onClick={navigateToProfile}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <UserCircle className="w-4 h-4" />
+                    View Profile
+                  </button>
+                  
+                  {user.role === 'admin' && (
+                    <button
+                      onClick={navigateToRoleManagement}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Role Management
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      logout();
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-50 border-t"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <button
