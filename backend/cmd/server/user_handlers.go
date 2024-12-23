@@ -12,9 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Permissions type for JSONB handling
-type Permissions map[string]bool
-
+// JSON Handling
 func (p Permissions) Value() (driver.Value, error) {
 	return json.Marshal(p)
 }
@@ -31,12 +29,11 @@ func (p *Permissions) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, &p)
 }
 
-type Role struct {
-	gorm.Model
-	Name        string      `json:"name" gorm:"unique"`
-	Color       string      `json:"color"`
-	Permissions Permissions `json:"permissions" gorm:"type:jsonb"`
-}
+/*
+
+ROLE LOGIC
+
+*/
 
 // Initialize roles table and add default roles
 func initializeRoles(db *gorm.DB) error {
@@ -83,6 +80,23 @@ func initializeRoles(db *gorm.DB) error {
 	}
 	return nil
 }
+
+func getRoles(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var roles []Role
+		if err := db.Find(&roles).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch roles"})
+			return
+		}
+		c.JSON(http.StatusOK, roles)
+	}
+}
+
+/*
+
+PROFILE LOGIC
+
+*/
 
 // Get current user's profile
 func getCurrentUserProfile(db *gorm.DB) gin.HandlerFunc {
@@ -183,7 +197,12 @@ func getCurrentUserStats(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Admin handlers
+/*
+
+ADMIN LOGIC
+
+*/
+
 func updateUserRole(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUserID := getUserIdFromToken(c)
@@ -215,16 +234,5 @@ func updateUserRole(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Role updated successfully"})
-	}
-}
-
-func getRoles(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var roles []Role
-		if err := db.Find(&roles).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch roles"})
-			return
-		}
-		c.JSON(http.StatusOK, roles)
 	}
 }

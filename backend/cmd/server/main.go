@@ -16,20 +16,6 @@ import (
 	"github.com/stefvuck/forum/internal/auth"
 )
 
-type User struct {
-	gorm.Model
-	Email         string    `json:"email"`
-	Name          string    `json:"name"`
-	Password      string    `json:"-"`
-	RoleID        uint      `json:"role_id"`
-	Role          Role      `json:"role" gorm:"foreignKey:RoleID"`
-	Verified      bool      `json:"verified"`
-	VerifyToken   string    `json:"-"`
-	VerifyExpires time.Time `json:"-"`
-	Threads       []Thread
-	Replies       []Reply
-}
-
 // TODO:
 // Middleware to verify @glasgow.ac.uk emails
 // func verifyUniversityEmail() gin.HandlerFunc {
@@ -195,6 +181,8 @@ func main() {
 	r.Run(":8080")
 }
 
+// Helper function for getting UserID from token
+
 func getUserIdFromToken(c *gin.Context) uint {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
@@ -214,6 +202,12 @@ func getUserIdFromToken(c *gin.Context) uint {
 
 	return claims.UserID // Return the user ID from the claims
 }
+
+/*
+
+Login/Register Handling
+
+*/
 
 func handleRegister(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -349,6 +343,12 @@ func handleVerifyEmail(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": "Email verified successfully"})
 	}
 }
+
+/*
+
+General Auth Middleware Logic
+
+*/
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

@@ -7,16 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Reply model represents a reply to a thread
-type Reply struct {
-	gorm.Model
-	Content  string `json:"content"`
-	ThreadID uint   `json:"thread_id"`
-	UserID   uint   `json:"user_id"`
-	Thread   Thread `gorm:"foreignKey:ThreadID"`
-	User     User   `gorm:"foreignKey:UserID"`
-}
-
 // Create a new reply to a thread
 func createReply(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
