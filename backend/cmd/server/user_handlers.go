@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
+	"strconv"
 
 	"database/sql/driver"
 	"encoding/json"
@@ -98,8 +98,9 @@ PROFILE LOGIC
 
 */
 
-// Get current user's profile
 func getCurrentUserProfile(db *gorm.DB) gin.HandlerFunc {
+	userService := NewUserService(db)
+
 	return func(c *gin.Context) {
 		userID := getUserIdFromToken(c)
 		if userID == 0 {
@@ -113,42 +114,62 @@ func getCurrentUserProfile(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var threadCount, replyCount int64
-		db.Model(&Thread{}).Where("user_id = ?", userID).Count(&threadCount)
-		db.Model(&Reply{}).Where("user_id = ?", userID).Count(&replyCount)
-
-		// Get last active timestamp
-		var lastActive time.Time
-		var lastThread, lastReply time.Time
-
-		if result := db.Model(&Thread{}).Where("user_id = ?", userID).
-			Order("created_at DESC").Select("created_at").Row().Scan(&lastThread); result == nil {
-			lastActive = lastThread
-		}
-
-		if result := db.Model(&Reply{}).Where("user_id = ?", userID).
-			Order("created_at DESC").Select("created_at").Row().Scan(&lastReply); result == nil {
-			if lastReply.After(lastActive) {
-				lastActive = lastReply
-			}
+		// Get full stats including private data
+		stats, err := userService.GetUserActivityStats(userID, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user stats"})
+			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":            user.ID,
-			"name":          user.Name,
-			"email":         user.Email,
-			"role":          user.Role,
-			"total_threads": threadCount,
-			"total_replies": replyCount,
-			"join_date":     user.CreatedAt,
-			"last_active":   lastActive,
-			"verified":      user.Verified,
+			"id":        user.ID,
+			"name":      user.Name,
+			"email":     user.Email,
+			"role":      user.Role,
+			"join_date": user.CreatedAt,
+			"verified":  user.Verified,
+			"stats":     stats,
 		})
 	}
 }
 
-// Get current user's stats
+func getPublicUserProfile(db *gorm.DB) gin.HandlerFunc {
+	userService := NewUserService(db)
+
+	return func(c *gin.Context) {
+		userID := c.Param("id")
+		var uid uint
+		if _, err := fmt.Sscanf(userID, "%d", &uid); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
+
+		var user User
+		if err := db.Preload("Role").First(&user, uid).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+
+		// Get public stats only
+		stats, err := userService.GetUserActivityStats(uid, false)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user stats"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"id":        user.ID,
+			"name":      user.Name,
+			"role":      user.Role,
+			"join_date": user.CreatedAt,
+			"stats":     stats,
+		})
+	}
+}
+
 func getCurrentUserStats(db *gorm.DB) gin.HandlerFunc {
+	userService := NewUserService(db)
+
 	return func(c *gin.Context) {
 		userID := getUserIdFromToken(c)
 		if userID == 0 {
@@ -156,44 +177,47 @@ func getCurrentUserStats(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var threads []Thread
-		var replies []Reply
-		threadsBySection := make(map[string]int)
-		repliesByMonth := make(map[string]int)
-
-		// Get threads by section
-		db.Where("user_id = ?", userID).Find(&threads)
-		for _, thread := range threads {
-			threadsBySection[thread.Section]++
+		stats, err := userService.GetUserActivityStats(userID, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user stats"})
+			return
 		}
 
-		// Calculate reply statistics
-		db.Where("user_id = ?", userID).Find(&replies)
-		var totalResponseTime float64
-		var responseCount int
+		c.JSON(http.StatusOK, stats)
+	}
+}
 
-		for _, reply := range replies {
-			repliesByMonth[reply.CreatedAt.Format("2006-01")]++
+func getUserActivity(db *gorm.DB) gin.HandlerFunc {
+	userService := NewUserService(db)
 
-			var thread Thread
-			if err := db.First(&thread, reply.ThreadID).Error; err != nil {
-				continue
-			}
-			responseTime := reply.CreatedAt.Sub(thread.CreatedAt).Hours()
-			totalResponseTime += responseTime
-			responseCount++
+	return func(c *gin.Context) {
+		// Parse user ID
+		userID := c.Param("id")
+		var uid uint
+		if _, err := fmt.Sscanf(userID, "%d", &uid); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
 		}
 
-		avgResponseTime := 0.0
-		if responseCount > 0 {
-			avgResponseTime = totalResponseTime / float64(responseCount)
+		// Parse pagination parameters
+		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+
+		if page < 1 {
+			page = 1
+		}
+		if pageSize < 1 || pageSize > 50 {
+			pageSize = 10
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"threadsBySection": threadsBySection,
-			"repliesByMonth":   repliesByMonth,
-			"avgResponseTime":  avgResponseTime,
-		})
+		// Get paginated activity
+		activity, err := userService.GetUserActivity(uid, page, pageSize)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user activity"})
+			return
+		}
+
+		c.JSON(http.StatusOK, activity)
 	}
 }
 

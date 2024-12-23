@@ -2,7 +2,7 @@ import { ArrowLeft, Clock } from 'lucide-react'
 import type { Thread } from '../../types'
 import { ReplySection } from './ReplySection'
 import { MarkdownContent } from '../common/MarkdownContent'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 type ThreadViewProps = {
   thread: Thread | null;
@@ -37,7 +37,15 @@ export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) =
             <Clock className="w-4 h-4 mr-1" />
             {thread.CreatedAt ? new Date(thread.CreatedAt).toLocaleString() : 'Date not available'}
           </span>
-          <span>by {thread.user && thread.user.name ? thread.user.name : 'Unknown Author'}</span>
+          <span>
+            by{' '}
+            <Link 
+              to={`/users/${thread.user?.ID}`}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              {thread.user?.name || 'Unknown Author'}
+            </Link>
+          </span>
         </div>
 
         <MarkdownContent 

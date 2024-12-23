@@ -79,17 +79,17 @@ type SearchResult struct {
 
 // UserActivityStats represents common statistics for both public and private profiles
 type UserActivityStats struct {
-	TotalThreads int                   `json:"total_threads"`
-	TotalReplies int                   `json:"total_replies"`
+	TotalThreads int64                 `json:"total_threads"`
+	TotalReplies int64                 `json:"total_replies"`
 	TopSections  []SectionCount        `json:"top_sections"`
 	RecentPosts  UserRecentActivity    `json:"recent_activity"`
-	ActivityMap  map[string]int        `json:"activity_map,omitempty"`
+	ActivityMap  map[string]int64      `json:"activity_map,omitempty"`
 	Metrics      UserEngagementMetrics `json:"metrics,omitempty"`
 }
 
 type SectionCount struct {
 	Section string `json:"section"`
-	Count   int    `json:"count"`
+	Count   int64  `json:"count"`
 }
 
 type UserRecentActivity struct {
@@ -98,9 +98,26 @@ type UserRecentActivity struct {
 }
 
 type UserEngagementMetrics struct {
-	AvgResponseTime float64        `json:"avg_response_time"`
-	ActivityHeatmap map[string]int `json:"activity_heatmap"`
-	LastActive      time.Time      `json:"last_active"`
+	AvgResponseTime float64          `json:"avg_response_time"`
+	ActivityHeatmap map[string]int64 `json:"activity_heatmap"`
+	LastActive      time.Time        `json:"last_active"`
+}
+
+type PaginatedActivity struct {
+	Activities []Activity `json:"activities"`
+	Total      int64      `json:"total"`
+	Page       int        `json:"page"`
+	PageSize   int        `json:"page_size"`
+}
+
+type Activity struct {
+	Type      string    `json:"type"`
+	ID        uint      `json:"id"`
+	Content   string    `json:"content"`
+	ThreadID  uint      `json:"thread_id"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+	Section   string    `json:"section,omitempty"`
 }
 
 // Permissions type for JSONB handling

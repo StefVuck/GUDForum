@@ -174,6 +174,8 @@ func main() {
 			protected.GET("/profile/stats", getCurrentUserStats(db))
 			protected.PATCH("/users/:id/role", updateUserRole(db))
 			protected.GET("/roles", getRoles(db))
+			protected.GET("/users/:id/public-profile", getPublicUserProfile(db))
+			protected.GET("/users/:id/activity", getUserActivity(db))
 		}
 	}
 

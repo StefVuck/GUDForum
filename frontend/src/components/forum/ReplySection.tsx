@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Clock } from 'lucide-react';
 import type { Thread } from '../../types';
+import { Link } from 'react-router-dom';
 
 type ReplySectionProps = {
   thread: Thread;
@@ -30,7 +31,12 @@ export const ReplySection = ({ thread, onReplySubmit }: ReplySectionProps) => {
           thread.replies.map((reply) => (
             <div key={`reply-${reply.ID}`} className="bg-gray-50 rounded-lg p-4 text-black">
               <div className="flex justify-between items-start mb-2">
-                <span className="font-medium text-black">{reply.User?.name || 'Anonymous'}</span>
+                <Link 
+                  to={`/users/${reply.User?.ID}`}
+                  className="font-medium text-blue-600 hover:text-blue-800"
+                >
+                  {reply.User?.name || 'Anonymous'}
+                </Link>
                 <span className="text-sm text-gray-500 flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
                   {new Date(reply.CreatedAt).toLocaleString()} {/* CreatedAt is a default param and therefore cap*/}

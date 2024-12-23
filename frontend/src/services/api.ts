@@ -16,6 +16,40 @@ type RegisterResponse = {
   verify_token?: string; // Only in development
 };
 
+type PublicUserProfile = {
+  ID: number;
+  name: string;
+  role: {
+    name: string;
+    color: string;
+  };
+  join_date: string;
+  recent_activity: {
+    threads: Array<{
+      ID: number;
+      title: string;
+      created_at: string;
+      section: string;
+    }>;
+    replies: Array<{
+      ID: number;
+      thread_title: string;
+      content: string;
+      created_at: string;
+      thread_id: number;
+    }>;
+  };
+  stats: {
+    total_threads: number;
+    total_replies: number;
+    top_sections: Array<{
+      section: string;
+      count: number;
+    }>;
+  };
+};
+
+
 // Helper function for common fetch options
 const fetchApi = async (endpoint: string, options?: RequestInit) => {
   // Retrieve the token from local storage or wherever you store it
@@ -57,6 +91,13 @@ export const api = {
 
   getCurrentUserStats: () => 
     fetchApi('/profile/stats'),
+
+  getPublicUserProfile: (userId: string | number): Promise<PublicUserProfile> => 
+    fetchApi(`/users/${userId}/public-profile`),
+
+  // Get public activity for any user
+  getUserActivity: (userId: string | number) => 
+    fetchApi(`/users/${userId}/activity`),
 
   updateUserRole: (userId: number, roleId: number) => 
     fetchApi(`/users/${userId}/role`, {

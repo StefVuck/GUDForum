@@ -3,12 +3,13 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { ForumHeader } from './components/layout/ForumHeader'
 import { ThreadList } from './components/forum/ThreadList';
-import { ThreadView } from './components/forum/ThreadView';
+import { ThreadViewWrapper } from './components/common/ThreadViewWrapper';
 import { CreateThreadModal } from './components/forum/CreateThreadModal';
 import { AuthProvider } from './context/AuthContext';
 import { api } from './services/api';
 import type { Thread } from './types';
 import { ProfilePage } from './components/forum/ProfilePage';
+import { PublicProfilePage } from './components/forum/PublicProfilePage';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { AdminRolesPage } from './components/forum/AdminRolesPage';
 import { NotFound } from './components/layout/NotFound';
@@ -188,19 +189,26 @@ function App() {
               <Route 
                 path="/thread/:id" 
                 element={
-                  <ThreadView 
-                    thread={selectedThread}
-                    onBack={() => setSelectedThread(null)}
-                    onReplySubmit={(content) => selectedThread && handleReplySubmit(selectedThread.ID, content)}
-                  />
+                  <RequireAuth>
+                    <ThreadViewWrapper />
+                  </RequireAuth>
                 } 
               />
 
-            <Route 
+              <Route 
                 path="/profile" 
                 element={
                   <RequireAuth>
                     <ProfilePage />
+                  </RequireAuth>
+                } 
+              />
+
+              <Route 
+                path="/users/:userId" 
+                element={
+                  <RequireAuth>
+                    <PublicProfilePage />
                   </RequireAuth>
                 } 
               />
