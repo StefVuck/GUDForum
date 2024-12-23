@@ -142,6 +142,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="flex h-screen w-screen bg-gray-100">
+          <RequireAuth>
           <Sidebar 
             currentSection={currentSection}
             onSectionChange={handleSectionChange}
@@ -224,6 +225,7 @@ function App() {
               )}
             </main>
           </div>
+          </RequireAuth>
         </div>
       </Router>
     </AuthProvider>
