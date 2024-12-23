@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, X, Filter, Calendar, Clock, PlusCircle } from 'lucide-react';
+import { Search, ChevronDown, X, Filter, Calendar, Clock, PlusCircle, User, MessageSquare } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { NotificationBell } from '../forum/NotificationBell';
+import { useLocation } from 'react-router-dom';
 
 type SearchCriteria = {
   type: string;
@@ -14,28 +17,34 @@ type SearchCriteria = {
 };
 
 interface ForumHeaderProps {
-  totalThreads: number;
-  currentSection: string;
-  onSearch: (criteria: SearchCriteria) => Promise<void>;
-  isSearchActive: boolean;
-  onClearSearch: () => void;
-  setIsCreateModalOpen: (open: boolean) => void;
+  totalThreads?: number;
+  currentSection?: string;
+  onSearch?: (criteria: SearchCriteria) => Promise<void>;
+  isSearchActive?: boolean;
+  onClearSearch?: () => void;
+  setIsCreateModalOpen?: (open: boolean) => void;
+  pageTitle?: string;
+  userName?: string;
 }
 
 export const ForumHeader = ({ 
   totalThreads, 
   currentSection,
-  onSearch = (criteria: SearchCriteria) => console.log('Search:', criteria),
+  onSearch,
   isSearchActive,
   onClearSearch,
   setIsCreateModalOpen,
-}) => {
+  pageTitle,
+  userName,
+}: ForumHeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const location = useLocation();
+  
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({
     type: 'title',
     query: '',
-    section: currentSection,
+    section: '',
     dateRange: 'all',
     hasReplies: false,
     isResolved: false,
@@ -44,7 +53,9 @@ export const ForumHeader = ({
     teamFilter: 'all'
   });
 
-  // Pre-defined options for filters
+  const isProfilePage = location.pathname.includes('/profile') || location.pathname.includes('/users/');
+  const isThreadPage = location.pathname.includes('/thread/');
+
   const teamOptions = [
     { value: 'all', label: 'All Teams' },
     { value: 'software', label: 'Software Team' },
@@ -57,43 +68,75 @@ export const ForumHeader = ({
     'Competition', 'Technical', 'Question', 'Hardware', 'Software',
     'Firmware', 'Racing', 'Safety', 'Maintenance', 'Events'
   ];
+  // Render different headers based on the current page
+  const renderHeaderContent = () => {
+    if (isProfilePage) {
+      return (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <User className="w-6 h-6 text-black gap-2 rounded-lg" />
+            <h2 className="text-lg text-black font-semibold">
+              {userName ? `${userName}'s Profile` : 'User Profile'}
+            </h2>
+          </div>
+        </div>
+      );
+    }
 
-  return (
-    <div className="bg-white border-b">
-      <div className="px-6 py-4">
-        {/* Existing header content */}
+    if (isThreadPage) {
+      return (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-black space-x-4">
+            <MessageSquare className="w-6 h-6" />
+            <h2 className="text-lg text-black font-semibold">
+              {pageTitle || 'Thread View'}
+            </h2>
+          </div>
+        </div>
+      );
+    }
+
+    // Default forum view header
+    return (
+      <>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h2 className="text-lg text-black font-semibold capitalize">
               {currentSection} Discussion
               {isSearchActive && <span className="text-sm text-gray-500 ml-2">(Search Results)</span>}
             </h2>
-            <span className="px-2 py-1 text-sm bg-blue-50 text-blue-600 rounded-full">
-              {totalThreads} threads
-            </span>
+            {totalThreads !== undefined && (
+              <span className="px-2 py-1 text-sm bg-blue-50 text-blue-600 rounded-full">
+                {totalThreads} threads
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>New Thread</span>
-            </button>
+            {setIsCreateModalOpen && (
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>New Thread</span>
+              </button>
+            )}
 
-          <button
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="flex items-center gap-2 px-4 py-2 text-white hover:bg-gray-50 rounded-lg border"
-          >
-            <Search className="w-4 h-4" />
-            <span>Search</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isSearchOpen ? 'rotate-180' : ''}`} />
-          </button>
+            {onSearch && (
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="flex items-center gap-2 px-4 py-2 text-white hover:bg-gray-900 rounded-lg border"
+              >
+                <Search className="w-4 h-4 text-white" />
+                <span>Search</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isSearchOpen ? 'rotate-180' : ''}`} />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Enhanced Search Panel */}
-        {isSearchOpen && (
+        {isSearchOpen && onSearch &&(
           <div className="mt-4 p-4 border rounded-lg bg-gray-50">
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -303,7 +346,16 @@ export const ForumHeader = ({
             </form>
           </div>
         )}
+      </>
+  );
+  };
+
+  return (
+    <div className="bg-white border-b">
+      <div className="px-6 py-4">
+        {renderHeaderContent()}
       </div>
     </div>
   );
 };
+

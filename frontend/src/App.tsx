@@ -150,16 +150,13 @@ function App() {
           />
           <div className="flex-1 flex flex-col h-full">
           <ForumHeader
-              totalThreads={(searchResults || threads).length}
-              currentSection={currentSection}
-              onSearch={handleSearch}
-              isSearchActive={!!searchResults}
-              onClearSearch={() => {
-                setSearchResults(null);
-                fetchThreads(currentSection);
-              }}
-              setIsCreateModalOpen={setIsCreateModalOpen} 
-            />
+            totalThreads={threads.length}
+            currentSection={currentSection}
+            onSearch={handleSearch}
+            isSearchActive={!!searchResults}
+            onClearSearch={() => setSearchResults(null)}
+            setIsCreateModalOpen={setIsCreateModalOpen}
+          />
             <main className="flex-1 h-full p-8 overflow-auto">
             <Routes>
               <Route path="/" element={

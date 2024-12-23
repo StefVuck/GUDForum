@@ -49,7 +49,7 @@ export const Sidebar = ({ currentSection, onSectionChange }: SidebarProps) => {
           {user ? (
             <div className="relative">
               <div 
-                className="p-3 bg-gray-50 text-black rounded cursor-pointer hover:bg-gray-100"
+                className="p-3 bg-gray-100 text-black rounded cursor-pointer hover:bg-gray-300 hover:ring"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
                 <p className="font-medium flex items-center gap-2">

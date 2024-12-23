@@ -17,7 +17,6 @@ export const ThreadView = ({ thread, onBack, onReplySubmit }: ThreadViewProps) =
     return <div>No thread selected.</div>;
   }
 
-  console.log('Thread data:', thread);
 
   return (
     <div className="space-y-6">
