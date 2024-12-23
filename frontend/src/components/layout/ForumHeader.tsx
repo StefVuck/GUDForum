@@ -101,10 +101,13 @@ export const ForumHeader = ({
       <>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h2 className="text-lg text-black font-semibold capitalize">
-              {currentSection} Discussion
-              {isSearchActive && <span className="text-sm text-gray-500 ml-2">(Search Results)</span>}
-            </h2>
+            {isSearchActive ? (
+              <span className="text-lg text-black font-semibold">Search Results</span>
+            ) : (
+              <span className="text-lg text-black font-semibold capitalize">
+                {currentSection} Discussion
+              </span>
+            )}
             {totalThreads !== undefined && (
               <span className="px-2 py-1 text-sm bg-blue-50 text-blue-600 rounded-full">
                 {totalThreads} threads

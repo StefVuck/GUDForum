@@ -150,7 +150,7 @@ function App() {
           />
           <div className="flex-1 flex flex-col h-full">
           <ForumHeader
-            totalThreads={threads.length}
+            totalThreads={searchResults ? searchResults.length : threads.length}
             currentSection={currentSection}
             onSearch={handleSearch}
             isSearchActive={!!searchResults}
