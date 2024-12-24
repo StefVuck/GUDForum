@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -114,33 +115,111 @@ func seedDatabase(db *gorm.DB) {
 	fmt.Println("Database seeded successfully!")
 }
 
-func main() {
-	// Initialize database connection
-	dsn := "host=localhost user=forumuser password=yourpassword dbname=drones_forum port=5432 sslmode=disable"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic("Failed to connect to database")
+// Configuration struct to hold all environment variables
+type Config struct {
+	DBHost      string
+	DBUser      string
+	DBPassword  string
+	DBName      string
+	DBPort      string
+	JWTSecret   string
+	APIUrl      string
+	FrontendUrl string
+}
+
+// LoadConfig loads configuration from environment variables
+func LoadConfig() Config {
+	return Config{
+		DBHost:      getEnv("DB_HOST", "localhost"),
+		DBUser:      getEnv("DB_USER", "forumuser"),
+		DBPassword:  getEnv("DB_PASSWORD", "yourpassword"),
+		DBName:      getEnv("DB_NAME", "drones_forum"),
+		DBPort:      getEnv("DB_PORT", "5432"),
+		JWTSecret:   getEnv("JWT_SECRET", "your_jwt_secret_key"),
+		APIUrl:      getEnv("API_URL", "http://localhost:8080"),
+		FrontendUrl: getEnv("FRONTEND_URL", "http://localhost:5173"),
 	}
-	fmt.Println("Successfully connected to database!")
+}
+
+// getEnv gets an environment variable with a fallback
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
+
+// initDB initializes the database connection with retries
+func initDB(config Config) (*gorm.DB, error) {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		config.DBHost,
+		config.DBUser,
+		config.DBPassword,
+		config.DBName,
+		config.DBPort,
+	)
+
+	var db *gorm.DB
+	var err error
+	maxRetries := 5
+	retryDelay := time.Second * 5
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			fmt.Println("Successfully connected to database!")
+			return db, nil
+		}
+
+		fmt.Printf("Failed to connect to database (attempt %d/%d): %v\n", i+1, maxRetries, err)
+		time.Sleep(retryDelay)
+	}
+
+	return nil, fmt.Errorf("failed to connect to database after %d attempts", maxRetries)
+}
+
+func main() {
+	// Load configuration
+	config := LoadConfig()
+
+	// Initialize database connection with retries
+	db, err := initDB(config)
+	if err != nil {
+		panic(err)
+	}
+
+	// Check if the database is empty before seeding
+	var count int64
+	db.Model(&User{}).Count(&count) // Check if there are any users
+	if count == 0 {
+		// Seed the database with initial data
+		seedDatabase(db) // Call to seed the database
+	} else {
+		fmt.Println("Database already seeded, skipping seeding.")
+	}
 
 	// Auto migrate the schema
-	db.AutoMigrate(&User{}, &Thread{}, &Reply{})
+	if err := db.AutoMigrate(&User{}, &Thread{}, &Reply{}, &Role{}); err != nil {
+		panic("Failed to migrate database: " + err.Error())
+	}
 
+	// Initialize roles
 	if err := initializeRoles(db); err != nil {
 		panic("Failed to initialize roles: " + err.Error())
 	}
-	// seedDatabase(db)
 
 	// Initialize Gin router
 	r := gin.Default()
 
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // Your Vite dev server
+		AllowOrigins:     []string{config.FrontendUrl},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	// Define API routes
@@ -181,7 +260,8 @@ func main() {
 	}
 
 	// Start the server
-	r.Run(":8080")
+	port := getEnv("PORT", "8080")
+	r.Run(":" + port)
 }
 
 // Helper function for getting UserID from token

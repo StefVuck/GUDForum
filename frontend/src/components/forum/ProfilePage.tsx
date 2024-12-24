@@ -108,8 +108,8 @@ export const ProfilePage = () => {
               Member since {new Date(profile.join_date).toLocaleDateString()}
             </p>
             <p className="text-gray-500">
-                {/* -3600000 is the 1 jan 1970 unix default*/}
-              Last active: {profile.stats.metrics.last_active && new Date(profile.stats.metrics.last_active).getTime() !== -3600000 ? new Date(profile.stats.metrics.last_active).toLocaleString() : "Never"}
+                {/* -3600000 is the 1 jan 1970 unix default, 0 also is, but instead of 0:00:00 is 1:00:00, ugh*/}
+              Last active: {profile.stats.metrics.last_active && new Date(profile.stats.metrics.last_active).getTime() !== -3600000 && new Date(profile.stats.metrics.last_active).getTime() !== 0 ? new Date(profile.stats.metrics.last_active).toLocaleDateString() : "Never"}
             </p>
           </div>
         </div>

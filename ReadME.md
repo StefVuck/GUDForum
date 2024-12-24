@@ -2,7 +2,23 @@
 
 This project is structured into a backend and frontend. The backend is built using Go and Gin framework, handling API requests and database interactions. The frontend is built using a React web framework, handling user interface and client-side logic.
 
-# Demonstration
+## Running the Project
+If you have docker setup you simply need to run:
+```bash
+docker-compose up
+```
+Or for a hard reboot (including the DB):
+```bash
+# Stop containers and remove volumes
+docker-compose down -v
+
+# Start fresh
+docker-compose up --build
+```
+
+If for some reason docker isnt an option, please refer to [Dockerless Guide](https://github.com/StefVuck/GUDForum/blob/main/Dockerless.md)
+
+# Demonstration (Outdated)
 ![image](https://github.com/user-attachments/assets/8d4b0faa-2642-4a43-bfec-61a774975893)
 
 ## Registration Funcitonality
@@ -29,243 +45,8 @@ In production, users must verify their token received in their email in order to
 ![image](https://github.com/user-attachments/assets/557e944a-90bf-4624-9eb2-028e7c9205b9)
 
 
-# Running it all
-For now, then easiest way is to start up two terminal windows, one in backend/, one in frontend/
-
-In `frontend` you should run:
-```bash
-npm install
-npm run dev
-```
-
-In `backend` you should run:
-```
-go run cmd/server/*.go
-```
-
-### Extra Export
-`export JWT_SECRET="your-secure-secret-key"`
-
-### Database Guide 
-Setting Up a PostgreSQL Database for the Forum Application
-This guide will help you set up a PostgreSQL database on Windows, macOS, and Linux to work with the forum application.
-Prerequisites
-- Ensure you have Go installed on your machine.
-- Install PostgreSQL on your system.
-### Step 1: Install PostgreSQL
-#### Windows
-1. Download the PostgreSQL installer from the official website.
-2. Run the installer and follow the prompts to install PostgreSQL.
-3. During installation, set a password for the postgres user and remember it.
-
-#### macOS
-1. You can install PostgreSQL using Homebrew. Open your terminal and run:
-`brew install postgresql`
-2. After installation, start the PostgreSQL service:
-`brew services start postgresql`
-
-#### Linux
-For Debian-based distributions (like Ubuntu), run:
-```bash
-   sudo apt update
-   sudo apt install postgresql postgresql-contrib
-```
-2. For Red Hat-based distributions (like CentOS), run:
-```bash
-   sudo yum install postgresql-server postgresql-contrib
-```
-3. After installation, initialize the database and start the service:
-```bash
-   sudo service postgresql start
-```
-### Step 2: Create a Database and User
-Open the PostgreSQL command line interface (psql) as the postgres user:
-`psql -U postgres`
-You may need to enter the password you set during installation.
-Create a new database for the forum application:
-```sql
--- First, disconnect all users and drop the database
-DROP DATABASE IF EXISTS drones_forum;
-
--- Create the new database
-CREATE DATABASE drones_forum;
-
--- Create user if not exists
-CREATE USER forumuser WITH PASSWORD 'yourpassword';
-
--- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE drones_forum TO forumuser;
-
--- Connect to the new database and create tables
-\c drones_forum
-
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'member',
-    verified BOOLEAN DEFAULT FALSE,
-    verify_token VARCHAR(255),
-    verify_expires TIMESTAMP WITH TIME ZONE
-);
-
-CREATE TABLE threads (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    title VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    section VARCHAR(50) NOT NULL,
-    tags TEXT,
-    views INTEGER DEFAULT 0,
-    user_id INTEGER REFERENCES users(id)
-);
-
-CREATE TABLE replies (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE,
-    content TEXT NOT NULL,
-    thread_id INTEGER REFERENCES threads(id),
-    user_id INTEGER REFERENCES users(id)
-);
-
--- Create indexes for better performance
-CREATE INDEX idx_threads_user_id ON threads(user_id);
-CREATE INDEX idx_replies_thread_id ON replies(thread_id);
-CREATE INDEX idx_replies_user_id ON replies(user_id);
-CREATE INDEX idx_threads_section ON threads(section);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_threads_tags ON threads USING gin(to_tsvector('english', tags));
-CREATE INDEX idx_threads_title ON threads USING gin(to_tsvector('english', title));
-CREATE INDEX idx_threads_content ON threads USING gin(to_tsvector('english', content));
-
-\q
-```
-
-
-## Structure (Outdated post v0.1.0)
-The full repo structure at the moment of writing is:
-```
-├── ReadME.md
-├── backend
-│   ├── cmd
-│   │   ├── main
-│   │   └── server
-│   │       ├── main.go
-│   │       ├── reply.go
-│   │       └── thread.go
-│   ├── go.mod
-│   ├── go.sum
-│   ├── internal
-│   │   ├── auth
-│   │   │   └── auth.go
-│   │   ├── config
-│   │   ├── handlers
-│   │   ├── models
-│   │   ├── repository
-│   │   └── services
-│   └── pkg
-│       └── utils
-├── docker
-└── frontend
-    ├── README.md
-    ├── eslint.config.js
-    ├── index.html
-    ├── package-lock.json
-    ├── package.json
-    ├── postcss.config.js
-    ├── public
-    │   └── vite.svg
-    ├── src
-    │   ├── App.css
-    │   ├── App.tsx
-    │   ├── assets
-    │   │   └── react.svg
-    │   ├── components
-    │   │   ├── auth
-    │   │   │   └── AuthModal.tsx
-    │   │   ├── common
-    │   │   │   └── MarkdownContent.tsx
-    │   │   ├── forum
-    │   │   │   ├── CreateThreadModal.tsx
-    │   │   │   ├── ReplySection.tsx
-    │   │   │   ├── ThreadCard.tsx
-    │   │   │   ├── ThreadList.tsx
-    │   │   │   └── ThreadView.tsx
-    │   │   └── layout
-    │   │       └── Sidebar.tsx
-    │   ├── config
-    │   │   └── sections.ts
-    │   ├── context
-    │   │   └── AuthContext.tsx
-    │   ├── hooks
-    │   ├── index.css
-    │   ├── main.tsx
-    │   ├── services
-    │   │   └── api.ts
-    │   ├── styles
-    │   ├── types
-    │   │   └── index.ts
-    │   ├── utils
-    │   └── vite-env.d.ts
-    ├── tailwind.config.js
-    ├── tsconfig.app.json
-    ├── tsconfig.json
-    ├── tsconfig.node.json
-    └── vite.config.ts
-```
-
-However this can be simplified to:
-```
-├── ReadME.md
-├── backend
-│   ├── cmd
-│   │   └── server
-│   │       ├── main.go
-│   │       ├── reply.go
-│   │       └── thread.go
-│   └── internal
-│       └── auth
-│           └── auth.go
-└── frontend
-    ├── src
-    │   ├── App.tsx
-    │   │   └── react.svg
-    │   ├── components
-    │   │   ├── auth
-    │   │   │   └── AuthModal.tsx
-    │   │   ├── common
-    │   │   │   └── MarkdownContent.tsx
-    │   │   ├── forum
-    │   │   │   ├── CreateThreadModal.tsx
-    │   │   │   ├── ReplySection.tsx
-    │   │   │   ├── ThreadCard.tsx
-    │   │   │   ├── ThreadList.tsx
-    │   │   │   └── ThreadView.tsx
-    │   │   └── layout
-    │   │       └── Sidebar.tsx
-    │   ├── config
-    │   │   └── sections.ts
-    │   ├── context
-    │   │   └── AuthContext.tsx
-    │   ├── index.css
-    │   ├── main.tsx
-    │   ├── services
-    │   │   └── api.ts
-    │   └── types
-    │       └── index.ts
-    │   
-    └── config files
-```
-
-The tree represents the directory structure of the project. The project is divided into two main directories: `backend` and `frontend`.
+# Structure 
+The project is divided into two main directories: `backend` and `frontend`.
 
 The `backend` directory contains the server-side code, which is written in Go. It has the following subdirectories:
 

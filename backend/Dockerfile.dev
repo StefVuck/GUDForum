@@ -1,0 +1,26 @@
+# Backend Dockerfile.dev
+FROM golang:1.23-alpine
+
+WORKDIR /app
+
+# Install essential build tools
+RUN apk add --no-cache git
+
+# Install air for hot reloading
+RUN go install github.com/air-verse/air@v1.61.5
+
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Create directories for Go project layout
+RUN mkdir -p /app/cmd/server /app/internal /app/pkg
+
+# Copy the rest of the application
+COPY . .
+
+# Expose the application port
+EXPOSE 8080
+
+# Start the application with air for hot reloading
+CMD ["air", "-c", ".air.toml"]

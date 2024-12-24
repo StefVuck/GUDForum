@@ -1,0 +1,85 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: gudrones-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+      - NODE_ENV=development
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: gudrones-backend
+    volumes:
+      - ./backend:/app
+      - /app/go/pkg
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=forumuser
+      - DB_PASSWORD=yourpassword
+      - DB_NAME=drones_forum
+      - DB_PORT=5432
+      - JWT_SECRET=your_jwt_secret_key
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - API_URL=http://localhost:8080
+      - FRONTEND_URL=http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: gudrones-postgres
+    environment:
+      - POSTGRES_USER=forumuser
+      - POSTGRES_PASSWORD=yourpassword
+      - POSTGRES_DB=drones_forum
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forumuser -d drones_forum"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: gudrones-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: gudrones-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@gudrones.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:
