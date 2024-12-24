@@ -108,7 +108,8 @@ export const ProfilePage = () => {
               Member since {new Date(profile.join_date).toLocaleDateString()}
             </p>
             <p className="text-gray-500">
-              Last active: {new Date(profile.stats.metrics.last_active).toLocaleString()}
+                {/* -3600000 is the 1 jan 1970 unix default*/}
+              Last active: {profile.stats.metrics.last_active && new Date(profile.stats.metrics.last_active).getTime() !== -3600000 ? new Date(profile.stats.metrics.last_active).toLocaleString() : "Never"}
             </p>
           </div>
         </div>
@@ -168,22 +169,26 @@ export const ProfilePage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold mb-4">Recent Replies</h2>
           <div className="space-y-4">
-            {profile.stats.recent_activity.replies?.map(reply => (
-              <div key={reply.ID} className="border-b pb-2">
-                <div className="text-sm text-gray-500">
-                  In thread: <Link 
-                    to={`/thread/${reply.thread_id}`}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    {reply.thread_title}
-                  </Link>
+            {profile.stats.recent_activity.replies && profile.stats.recent_activity.replies.length > 0 ? (
+              profile.stats.recent_activity.replies.map(reply => (
+                <div key={reply.ID} className="border-b pb-2">
+                  <div className="text-sm text-gray-500">
+                    In thread: <Link 
+                      to={`/thread/${reply.thread_id}`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {reply.thread_title}
+                    </Link>
+                  </div>
+                  <p className="text-gray-700 mt-1 line-clamp-2">{reply.content}</p>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {new Date(reply.created_at).toLocaleDateString()}
+                  </div>
                 </div>
-                <p className="text-gray-700 mt-1 line-clamp-2">{reply.content}</p>
-                <div className="text-sm text-gray-500 mt-1">
-                  {new Date(reply.created_at).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-gray-500">No replies yet</div>
+            )}
           </div>
         </div>
       </div>
@@ -215,50 +220,58 @@ export const ProfilePage = () => {
           </div>
         )}
 
-        {/* Activity Heatmap */}
+       {/* Activity Heatmap */}
         <div className="mb-8">
-          <h3 className="font-semibold mb-4">Activity Hours</h3>
-          <div className="space-y-2">
-            {profile.stats.metrics.activity_heatmap && Object.entries(profile.stats.metrics.activity_heatmap)
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([timeSlot, count]) => (
+        <h3 className="font-semibold mb-4">Activity Hours</h3>
+        <div className="space-y-2">
+            {profile.stats.metrics.activity_heatmap && Object.keys(profile.stats.metrics.activity_heatmap).length > 0 ? (
+            Object.entries(profile.stats.metrics.activity_heatmap)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([timeSlot, count]) => (
                 <div key={timeSlot} className="flex items-center gap-2">
-                  <div className="w-32 text-gray-600">{timeSlot}</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="w-32 text-gray-600">{timeSlot}</div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{
                         width: `${(count / Math.max(...Object.values(profile.stats.metrics.activity_heatmap))) * 100}%`
-                      }}
+                        }}
                     />
-                  </div>
-                  <div className="w-12 text-right text-gray-600">{count}</div>
+                    </div>
+                    <div className="w-12 text-right text-gray-600">{count}</div>
                 </div>
-              ))}
-          </div>
+                ))
+            ) : (
+            <div className="text-gray-500">No activity recorded for heatmap</div>
+            )}
+        </div>
         </div>
 
         {/* Monthly Activity */}
         <div>
-          <h3 className="font-semibold mb-4">Monthly Activity</h3>
-          <div className="space-y-2">
-            {profile.stats.activity_map && Object.entries(profile.stats.activity_map)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .map(([month, count]) => (
+        <h3 className="font-semibold mb-4">Monthly Activity</h3>
+        <div className="space-y-2">
+            {profile.stats.activity_map && Object.keys(profile.stats.activity_map).length > 0 ? (
+            Object.entries(profile.stats.activity_map)
+                .sort(([a], [b]) => b.localeCompare(a))
+                .map(([month, count]) => (
                 <div key={month} className="flex items-center gap-2">
-                  <div className="w-32 text-gray-600">{month}</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="w-32 text-gray-600">{month}</div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-purple-500 h-2 rounded-full"
-                      style={{
+                        className="bg-purple-500 h-2 rounded-full"
+                        style={{
                         width: `${(count / Math.max(...Object.values(profile.stats.activity_map))) * 100}%`
-                      }}
+                        }}
                     />
-                  </div>
-                  <div className="w-12 text-right text-gray-600">{count}</div>
+                    </div>
+                    <div className="w-12 text-right text-gray-600">{count}</div>
                 </div>
-              ))}
-          </div>
+                ))
+            ) : (
+            <div className="text-gray-500">No monthly activity data available</div>
+            )}
+        </div>
         </div>
       </div>
     </div>

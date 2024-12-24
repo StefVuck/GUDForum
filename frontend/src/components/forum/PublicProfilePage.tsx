@@ -108,61 +108,61 @@ export const PublicProfilePage = () => {
       </div>
 
       {/* Activity Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid text-black grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Threads */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold mb-4 text-black flex items-center">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
             <MessageSquare className="w-5 h-5 mr-2" />
             Recent Threads
           </h2>
           <div className="space-y-4">
-          {profile.stats.recent_activity.threads.length > 0 ? (
-            profile.stats.recent_activity.threads.map(thread => (
+            {profile.stats.recent_activity.threads && profile.stats.recent_activity.threads.length > 0 ? (
+              profile.stats.recent_activity.threads.map(thread => (
                 <div key={thread.ID} className="border-b pb-2">
-                <Link 
+                  <Link 
                     to={`/thread/${thread.ID}`}
                     className="text-blue-600 hover:text-blue-800 font-medium"
-                >
+                  >
                     {thread.title}
-                </Link>
-                <div className="text-sm text-gray-500 flex items-center mt-1">
+                  </Link>
+                  <div className="text-sm text-gray-500 flex items-center mt-1">
                     <Clock className="w-4 h-4 mr-1" />
                     {new Date(thread.created_at).toLocaleDateString()}
                     <span className="mx-2">•</span>
                     {thread.section}
+                  </div>
                 </div>
-                </div>
-            ))
+              ))
             ) : (
-            <div className="text-gray-500">No threads yet</div>
+              <div className="text-gray-500">No threads yet</div>
             )}
           </div>
         </div>
 
         {/* Recent Replies */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold mb-4 text-black">Recent Replies</h2>
+          <h2 className="text-xl font-bold mb-4">Recent Replies</h2>
           <div className="space-y-4">
-          {profile.stats.recent_activity.replies.length > 0 ? (
-            profile.stats.recent_activity.replies.map(reply => (
+            {profile.stats.recent_activity.replies && profile.stats.recent_activity.replies.length > 0 ? (
+              profile.stats.recent_activity.replies.map(reply => (
                 <div key={reply.ID} className="border-b pb-2">
-                <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500">
                     In thread: <Link 
-                    to={`/thread/${reply.thread_id}`}
-                    className="text-blue-600 hover:text-blue-800"
+                      to={`/thread/${reply.thread_id}`}
+                      className="text-blue-600 hover:text-blue-800"
                     >
-                    {reply.thread_title}
+                      {reply.thread_title}
                     </Link>
-                </div>
-                <p className="text-gray-700 mt-1 line-clamp-2">{reply.content}</p>
-                <div className="text-sm text-gray-500 mt-1">
+                  </div>
+                  <p className="text-gray-700 mt-1 line-clamp-2">{reply.content}</p>
+                  <div className="text-sm text-gray-500 mt-1">
                     {new Date(reply.created_at).toLocaleDateString()}
+                  </div>
                 </div>
-                </div>
-            ))
+              ))
             ) : (
-            <div className="text-gray-500">No replies yet</div>
-            )} 
+              <div className="text-gray-500">No replies yet</div>
+            )}
           </div>
         </div>
       </div>
