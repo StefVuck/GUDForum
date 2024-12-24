@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, X, Filter, Calendar, Clock, PlusCircle, User, MessageSquare } from 'lucide-react';
+import { Search, ChevronDown, X, Filter, Calendar, Clock, PlusCircle, User, MessageSquare, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { NotificationBell } from '../forum/NotificationBell';
 import { useLocation } from 'react-router-dom';
@@ -55,6 +55,7 @@ export const ForumHeader = ({
 
   const isProfilePage = location.pathname.includes('/profile') || location.pathname.includes('/users/');
   const isThreadPage = location.pathname.includes('/thread/');
+  const isAdminPage = location.pathname.includes('/admin/');
 
   const teamOptions = [
     { value: 'all', label: 'All Teams' },
@@ -90,6 +91,19 @@ export const ForumHeader = ({
             <MessageSquare className="w-6 h-6" />
             <h2 className="text-lg text-black font-semibold">
               {pageTitle || 'Thread View'}
+            </h2>
+          </div>
+        </div>
+      );
+    }
+
+    if (isAdminPage) {
+      return (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Shield className="w-6 h-6 text-black gap-2 rounded-lg" />
+            <h2 className="text-lg text-black font-semibold">
+              Admin Dashboard
             </h2>
           </div>
         </div>

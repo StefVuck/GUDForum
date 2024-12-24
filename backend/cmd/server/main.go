@@ -129,7 +129,7 @@ func main() {
 	if err := initializeRoles(db); err != nil {
 		panic("Failed to initialize roles: " + err.Error())
 	}
-	seedDatabase(db)
+	// seedDatabase(db)
 
 	// Initialize Gin router
 	r := gin.Default()
@@ -137,7 +137,7 @@ func main() {
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // Your Vite dev server
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -172,8 +172,9 @@ func main() {
 			// User and role management routes
 			protected.GET("/profile", getCurrentUserProfile(db))
 			protected.GET("/profile/stats", getCurrentUserStats(db))
-			protected.PATCH("/users/:id/role", updateUserRole(db))
+			protected.PATCH("/users/:userId/role", updateUserRole(db))
 			protected.GET("/roles", getRoles(db))
+			protected.GET("/users", handleGetUsers(db))
 			protected.GET("/users/:id/public-profile", getPublicUserProfile(db))
 			protected.GET("/users/:id/activity", getUserActivity(db))
 		}
@@ -288,6 +289,12 @@ func handleLogin(db *gorm.DB) gin.HandlerFunc {
 
 		var user User
 		if err := db.Where("email = ?", input.Email).First(&user).Error; err != nil {
+			c.JSON(401, gin.H{"error": "Invalid credentials"})
+			return
+		}
+
+		// Preload the Role relationship
+		if err := db.Preload("Role").Where("email = ?", input.Email).First(&user).Error; err != nil {
 			c.JSON(401, gin.H{"error": "Invalid credentials"})
 			return
 		}

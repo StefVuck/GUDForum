@@ -29,7 +29,7 @@ export const AdminRolesPage = () => {
           api.getUsers()
         ]);
         setRoles(rolesData);
-        setUsers(usersData);
+        setUsers(usersData.users);
       } catch (error) {
         setError('Failed to fetch data');
         console.error('Error:', error);
@@ -43,13 +43,19 @@ export const AdminRolesPage = () => {
 
   const handleRoleChange = async (userId: number, roleId: number) => {
     try {
-      await api.updateUserRole(userId, roleId);
-      // Update local state after successful API call
-      setUsers(users.map(user => 
-        user.ID === userId 
-          ? { ...user, role: roles.find(r => r.id === roleId)! }
-          : user
-      ));
+      console.log("Role Change: ", userId, roleId);
+  
+      // Call the API to update the role
+      const response = await api.updateUserRole(userId, roleId);
+  
+      if (response.message === "Role updated successfully" && response.user) {
+        // Update the user in the state with the returned data
+        setUsers(users.map(user => 
+          user.ID === userId 
+            ? response.user // Use the updated user object from the backend
+            : user
+        ));
+      }
     } catch (error) {
       setError('Failed to update user role');
       console.error('Error:', error);
@@ -62,7 +68,7 @@ export const AdminRolesPage = () => {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Role Management</h1>
+      <h1 className="text-2xl text-black font-bold mb-6">Role Management</h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -71,9 +77,9 @@ export const AdminRolesPage = () => {
       )}
 
       {/* Roles Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {roles.map(role => (
-          <div key={role.id} className="bg-white p-4 rounded-lg shadow">
+      <div className="grid text-black grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {roles.map((role, index) => (
+          <div key={index} className="bg-white p-4 rounded-lg shadow">
             <div className="flex justify-between items-center">
               <span 
                 className="px-2 py-1 rounded text-white text-sm"
@@ -82,14 +88,14 @@ export const AdminRolesPage = () => {
                 {role.name}
               </span>
               <span className="text-sm text-gray-500">
-                {users.filter(u => u.role.id === role.id).length} users
+                {users.filter(u => u.role_id === role.ID).length} users
               </span>
             </div>
             <div className="mt-4">
               <h4 className="font-semibold text-sm mb-2">Permissions:</h4>
               <ul className="space-y-1">
-                {Object.entries(role.permissions).map(([perm, allowed]) => (
-                  <li key={perm} className="flex items-center gap-2 text-sm">
+                {Object.entries(role.permissions).map(([perm, allowed], permIndex) => (
+                  <li key={permIndex} className="flex items-center gap-2 text-sm">
                     <div 
                       className={`w-2 h-2 rounded-full ${
                         allowed ? 'bg-green-500' : 'bg-red-500'
@@ -105,7 +111,7 @@ export const AdminRolesPage = () => {
       </div>
 
       {/* User Management Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white text-black rounded-lg shadow overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -121,19 +127,32 @@ export const AdminRolesPage = () => {
                 <td className="px-6 py-4">{user.name}</td>
                 <td className="px-6 py-4">{user.email}</td>
                 <td className="px-6 py-4">
-                  <span
-                    className="px-2 py-1 rounded text-white text-sm"
-                    style={{ backgroundColor: user.role.color }}
-                  >
-                    {user.role.name}
-                  </span>
+                {user.role ? (
+                    <span
+                        className="px-2 py-1 rounded text-white text-sm"
+                        style={{ backgroundColor: user.role.color }}
+                    >
+                        {user.role.name}
+                    </span>
+                ) : (
+                    <span>No Role</span>
+                )}
                 </td>
                 <td className="px-6 py-4">
                   <select
-                    className="border rounded px-2 py-1"
-                    value={user.role.id}
-                    onChange={(e) => handleRoleChange(user.ID, Number(e.target.value))}
+                    key={user.ID}
+                    className="border rounded bg-gray-200 px-2 py-1"
+                    value={user.role ? user.role.id : ""}
+                    onChange={(e) => {
+                        const selectedRoleName = e.target.value;
+                        const selectedRole = roles.find(role => role.name == selectedRoleName); // Find role by name
+                        console.log(selectedRoleName, selectedRole)
+                        if (selectedRole) {
+                          handleRoleChange(user.ID, selectedRole.ID); // Pass the corresponding role ID
+                        }
+                      }} 
                   >
+                    <option value="">Select a role</option>
                     {roles.map(role => (
                       <option key={role.id} value={role.id}>
                         {role.name}

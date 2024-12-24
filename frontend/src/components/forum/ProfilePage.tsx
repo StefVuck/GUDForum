@@ -141,7 +141,7 @@ export const ProfilePage = () => {
             Recent Threads
           </h2>
           <div className="space-y-4">
-            {profile.stats.recent_activity.threads.length > 0 ? (
+            {profile.stats.recent_activity.threads && profile.stats.recent_activity.threads.length > 0 ? (
               profile.stats.recent_activity.threads.map(thread => (
                 <div key={thread.ID} className="border-b pb-2">
                   <Link 
@@ -168,7 +168,7 @@ export const ProfilePage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold mb-4">Recent Replies</h2>
           <div className="space-y-4">
-            {profile.stats.recent_activity.replies.map(reply => (
+            {profile.stats.recent_activity.replies?.map(reply => (
               <div key={reply.ID} className="border-b pb-2">
                 <div className="text-sm text-gray-500">
                   In thread: <Link 
@@ -193,11 +193,11 @@ export const ProfilePage = () => {
         <h2 className="text-xl font-bold mb-6">Activity Overview</h2>
         
         {/* Section Distribution */}
-        {profile.stats.top_sections.length > 0 && (
+        {profile.stats.top_sections && profile.stats.top_sections.length > 0 && (
           <div className="mb-8">
             <h3 className="font-semibold mb-4">Threads by Section</h3>
             <div className="space-y-2">
-              {profile.stats.top_sections.map(({ section, count }) => (
+              {profile.stats.top_sections?.map(({ section, count }) => (
                 <div key={section} className="flex items-center gap-2">
                   <div className="w-32 text-gray-600 capitalize">{section}</div>
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
@@ -219,7 +219,7 @@ export const ProfilePage = () => {
         <div className="mb-8">
           <h3 className="font-semibold mb-4">Activity Hours</h3>
           <div className="space-y-2">
-            {Object.entries(profile.stats.metrics.activity_heatmap)
+            {profile.stats.metrics.activity_heatmap && Object.entries(profile.stats.metrics.activity_heatmap)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([timeSlot, count]) => (
                 <div key={timeSlot} className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export const ProfilePage = () => {
         <div>
           <h3 className="font-semibold mb-4">Monthly Activity</h3>
           <div className="space-y-2">
-            {Object.entries(profile.stats.activity_map)
+            {profile.stats.activity_map && Object.entries(profile.stats.activity_map)
               .sort(([a], [b]) => b.localeCompare(a))
               .map(([month, count]) => (
                 <div key={month} className="flex items-center gap-2">

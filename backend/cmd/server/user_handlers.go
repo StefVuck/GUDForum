@@ -229,34 +229,103 @@ ADMIN LOGIC
 
 func updateUserRole(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		currentUserID := getUserIdFromToken(c)
-		var currentUser User
-		if err := db.Preload("Role").First(&currentUser, currentUserID).Error; err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		// Extract userId from URL
+		userIdStr := c.Param("userId")
+		userId, err := strconv.Atoi(userIdStr)
+		if err != nil || userId <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 			return
 		}
 
-		if !currentUser.Role.Permissions["can_manage_roles"] {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
-			return
-		}
-
+		// Parse input payload
 		var input struct {
-			UserID uint `json:"userId" binding:"required"`
-			RoleID uint `json:"roleId" binding:"required"`
+			RoleID json.Number `json:"roleId" binding:"required"`
 		}
-
 		if err := c.ShouldBindJSON(&input); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 			return
 		}
 
-		if err := db.Model(&User{}).Where("id = ?", input.UserID).
-			Update("role_id", input.RoleID).Error; err != nil {
+		// Convert RoleID to integer
+		roleID, err := input.RoleID.Int64()
+		if err != nil || roleID <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role ID"})
+			return
+		}
+
+		// Ensure the role exists
+		var role Role
+		if err := db.First(&role, roleID).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Role does not exist"})
+			return
+		}
+
+		// Update user's role
+		if err := db.Model(&User{}).Where("id = ?", userId).Update("role_id", uint(roleID)).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Role updated successfully"})
+		// Fetch updated user with role
+		var updatedUser User
+		if err := db.Preload("Role").First(&updatedUser, userId).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch updated user"})
+			return
+		}
+
+		// Return the updated user object
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Role updated successfully",
+			"user":    updatedUser,
+		})
+	}
+}
+
+func handleGetUsers(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Extract and validate JWT token
+		userID := getUserIdFromToken(c)
+
+		// Fetch user with role information
+		var requestingUser User
+		if err := db.Preload("Role").Where("id = ?", userID).First(&requestingUser).Error; err != nil {
+			c.JSON(403, gin.H{"error": "Access denied"})
+			return
+		}
+
+		// Check if user has admin role
+		if requestingUser.RoleID != 1 {
+			c.JSON(403, gin.H{"error": "Access denied"})
+			return
+		}
+
+		// Handle pagination
+		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+		offset := (page - 1) * pageSize
+
+		// Fetch users with roles
+		var users []User
+		if err := db.Preload("Role").Offset(offset).Limit(pageSize).Find(&users).Error; err != nil {
+			c.JSON(500, gin.H{"error": "Failed to fetch users"})
+			return
+		}
+
+		// Total count for pagination
+		var total int64
+		if err := db.Model(&User{}).Count(&total).Error; err != nil {
+			c.JSON(500, gin.H{"error": "Failed to count users"})
+			return
+		}
+
+		// Return users with pagination info
+		c.JSON(200, gin.H{
+			"users": users,
+			"pagination": gin.H{
+				"page":      page,
+				"page_size": pageSize,
+				"total":     total,
+			},
+		})
 	}
 }

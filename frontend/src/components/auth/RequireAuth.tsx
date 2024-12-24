@@ -14,7 +14,7 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, roles }) => 
       return <UnauthorizedAccess />;
     }
   
-    if (roles && !roles.includes(user.role)) {
+    if (roles && !roles.includes(user.role.name)) {
       // For role-specific access, you might want to create a different component
       // or modify UnauthorizedAccess to handle insufficient permissions
       return <UnauthorizedAccess />;
