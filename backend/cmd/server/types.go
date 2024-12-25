@@ -8,16 +8,18 @@ import (
 
 type User struct {
 	gorm.Model
-	Email         string    `json:"email"`
-	Name          string    `json:"name"`
-	Password      string    `json:"-"`
-	RoleID        uint      `json:"role_id"`
-	Role          Role      `json:"role" gorm:"foreignKey:RoleID"`
-	Verified      bool      `json:"verified"`
-	VerifyToken   string    `json:"-"`
-	VerifyExpires time.Time `json:"-"`
-	Threads       []Thread
-	Replies       []Reply
+	Email             string    `json:"email"`
+	Name              string    `json:"name"`
+	Password          string    `json:"-"`
+	RoleID            uint      `json:"role_id"`
+	Role              Role      `json:"role" gorm:"foreignKey:RoleID"`
+	Verified          bool      `json:"verified"`
+	VerifyToken       string    `json:"-"`
+	VerifyExpires     time.Time `json:"-"`
+	Bio               string    `json:"bio"`
+	ProfilePictureURL string    `json:"profile_picture_url"`
+	Threads           []Thread
+	Replies           []Reply
 }
 
 // Reply model represents a reply to a thread
@@ -128,4 +130,9 @@ type Role struct {
 	Name        string      `json:"name" gorm:"unique"`
 	Color       string      `json:"color"`
 	Permissions Permissions `json:"permissions" gorm:"type:jsonb"`
+}
+
+type ProfileUpdateInput struct {
+	Bio               *string `json:"bio"`
+	ProfilePictureURL *string `json:"profile_picture_url"`
 }

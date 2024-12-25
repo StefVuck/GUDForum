@@ -26,37 +26,34 @@ import (
 // 	}
 // }
 
-// Seed the database with initial data
 func seedDatabase(db *gorm.DB) {
-	// First ensure roles exist
-	memberRole := Role{
-		Name:  "member",
-		Color: "#808080",
-		Permissions: map[string]bool{
-			"can_create_threads": true,
-			"can_reply":          true,
-		},
+	// First ensure member role exists
+	memberRole := Role{}
+	// Fetch the member role again now that we're sure it exists
+	if err := db.Where("name = ?", "member").First(&memberRole).Error; err != nil {
+		fmt.Println("Error finding member role:", err)
+		return
 	}
 
-	// Create the member role if it doesn't exist
-	var existingRole Role
-	if err := db.Where("name = ?", "member").First(&existingRole).Error; err != nil {
-		if err := db.Create(&memberRole).Error; err != nil {
-			fmt.Println("Error creating member role:", err)
-			return
-		}
-	} else {
-		memberRole = existingRole
+	// Rest of your seeding logic...
+	// Create test user with hashed password
+	hashedPassword, err := auth.HashPassword("test123")
+	if err != nil {
+		fmt.Println("Error hashing password:", err)
+		return
 	}
 
-	// Create test user
 	user := User{
-		Email:  "test@glasgow.ac.uk",
-		Name:   "John Doe",
-		RoleID: memberRole.ID, // Use the role ID instead of role name
+		Email:    "test@glasgow.ac.uk",
+		Name:     "John Doe",
+		RoleID:   memberRole.ID,
+		Password: hashedPassword,
+		Verified: true,
+		Bio:      "Test user for the GU Drones Forum",
 	}
 
-	result := db.FirstOrCreate(&user, User{Email: "test@glasgow.ac.uk"})
+	// Create the user if they don't exist
+	result := db.Where(User{Email: user.Email}).FirstOrCreate(&user)
 	if result.Error != nil {
 		fmt.Println("Error creating user:", result.Error)
 		return
@@ -84,14 +81,15 @@ func seedDatabase(db *gorm.DB) {
 		},
 	}
 
+	// Create threads if they don't exist
 	for _, thread := range threads {
-		result := db.FirstOrCreate(&thread, Thread{Title: thread.Title})
+		result := db.Where(Thread{Title: thread.Title}).FirstOrCreate(&thread)
 		if result.Error != nil {
 			fmt.Println("Error creating thread:", result.Error)
 			continue
 		}
 
-		// Create some replies for each thread
+		// Create replies for each thread
 		replies := []Reply{
 			{
 				Content:  "Great to be here! Looking forward to working with everyone.",
@@ -112,7 +110,7 @@ func seedDatabase(db *gorm.DB) {
 		}
 	}
 
-	fmt.Println("Database seeded successfully!")
+	fmt.Println("Test data seeded successfully!")
 }
 
 // Configuration struct to hold all environment variables
@@ -189,19 +187,23 @@ func main() {
 		panic(err)
 	}
 
+	if err := db.AutoMigrate(
+		&Role{},   // Roles first (no foreign key dependencies)
+		&User{},   // Users depend on roles
+		&Thread{}, // Threads depend on users
+		&Reply{},  // Replies depend on threads and users
+	); err != nil {
+		panic("Failed to migrate database: " + err.Error())
+	}
+
 	// Check if the database is empty before seeding
 	var count int64
 	db.Model(&User{}).Count(&count) // Check if there are any users
-	if count == 0 {
+	if count < 2 {
 		// Seed the database with initial data
 		seedDatabase(db) // Call to seed the database
 	} else {
 		fmt.Println("Database already seeded, skipping seeding.")
-	}
-
-	// Auto migrate the schema
-	if err := db.AutoMigrate(&User{}, &Thread{}, &Reply{}, &Role{}); err != nil {
-		panic("Failed to migrate database: " + err.Error())
 	}
 
 	// Initialize roles
@@ -250,6 +252,7 @@ func main() {
 
 			// User and role management routes
 			protected.GET("/profile", getCurrentUserProfile(db))
+			protected.PATCH("/profile", updateUserProfile(db))
 			protected.GET("/profile/stats", getCurrentUserStats(db))
 			protected.PATCH("/users/:userId/role", updateUserRole(db))
 			protected.GET("/roles", getRoles(db))

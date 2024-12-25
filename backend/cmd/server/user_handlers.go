@@ -122,13 +122,15 @@ func getCurrentUserProfile(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":        user.ID,
-			"name":      user.Name,
-			"email":     user.Email,
-			"role":      user.Role,
-			"join_date": user.CreatedAt,
-			"verified":  user.Verified,
-			"stats":     stats,
+			"id":                  user.ID,
+			"name":                user.Name,
+			"email":               user.Email,
+			"role":                user.Role,
+			"bio":                 user.Bio,
+			"join_date":           user.CreatedAt,
+			"verified":            user.Verified,
+			"stats":               stats,
+			"profile_picture_url": user.ProfilePictureURL,
 		})
 	}
 }
@@ -158,11 +160,13 @@ func getPublicUserProfile(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":        user.ID,
-			"name":      user.Name,
-			"role":      user.Role,
-			"join_date": user.CreatedAt,
-			"stats":     stats,
+			"id":                  user.ID,
+			"name":                user.Name,
+			"role":                user.Role,
+			"join_date":           user.CreatedAt,
+			"bio":                 user.Bio,
+			"profile_picture_url": user.ProfilePictureURL,
+			"stats":               stats,
 		})
 	}
 }
@@ -326,6 +330,68 @@ func handleGetUsers(db *gorm.DB) gin.HandlerFunc {
 				"page_size": pageSize,
 				"total":     total,
 			},
+		})
+	}
+}
+
+func updateUserProfile(db *gorm.DB) gin.HandlerFunc {
+	userService := NewUserService(db) // Add this
+	return func(c *gin.Context) {
+		userID := getUserIdFromToken(c)
+		if userID == 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		var input ProfileUpdateInput
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		updates := make(map[string]interface{})
+		if input.Bio != nil {
+			updates["bio"] = *input.Bio
+		}
+		if input.ProfilePictureURL != nil {
+			updates["profile_picture_url"] = *input.ProfilePictureURL
+		}
+
+		if len(updates) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No updates provided"})
+			return
+		}
+
+		if err := db.Model(&User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+			return
+		}
+
+		// Fetch updated user
+		var user User
+		if err := db.Preload("Role").First(&user, userID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch updated profile"})
+			return
+		}
+
+		// Get stats like in getCurrentUserProfile
+		stats, err := userService.GetUserActivityStats(userID, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user stats"})
+			return
+		}
+
+		// Return the same structure as getCurrentUserProfile
+		c.JSON(http.StatusOK, gin.H{
+			"id":                  user.ID,
+			"name":                user.Name,
+			"email":               user.Email,
+			"role":                user.Role,
+			"bio":                 user.Bio,
+			"profile_picture_url": user.ProfilePictureURL,
+			"join_date":           user.CreatedAt,
+			"verified":            user.Verified,
+			"stats":               stats,
 		})
 	}
 }

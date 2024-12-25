@@ -3,11 +3,14 @@ import { Navigate, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { MessageSquare, Clock } from 'lucide-react';
+import { ProfileHeader } from './ProfileHeader';
 
 type UserProfile = {
   id: number;
   email: string;
   name: string;
+  bio?: string; 
+  profile_picture_url?: string;  
   role: {
     ID: number;
     CreatedAt: string;
@@ -69,6 +72,10 @@ export const ProfilePage = () => {
     fetchProfile();
   }, [user]);
 
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    setProfile(updatedProfile);
+  };
+
   if (!user) {
     return <Navigate to="/" replace />;
   }
@@ -84,37 +91,20 @@ export const ProfilePage = () => {
   return (
     <div className="max-w-4xl text-black mx-auto p-6 space-y-6">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-            <span className="text-2xl text-gray-600">
-              {profile.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              {profile.name}
-              <span 
-                className="px-2 py-1 text-sm rounded text-white"
-                style={{ backgroundColor: profile.role.color }}
-              >
-                {profile.role.name}
-              </span>
-            </h1>
-            <p className="text-gray-500">
-              {profile.email}
-            </p>
-            <p className="text-gray-500">
-              Member since {new Date(profile.join_date).toLocaleDateString()}
-            </p>
-            <p className="text-gray-500">
-                {/* -3600000 is the 1 jan 1970 unix default, 0 also is, but instead of 0:00:00 is 1:00:00, ugh*/}
-              Last active: {profile.stats.metrics.last_active && new Date(profile.stats.metrics.last_active).getTime() !== -3600000 && new Date(profile.stats.metrics.last_active).getTime() !== 0 ? new Date(profile.stats.metrics.last_active).toLocaleDateString() : "Never"}
-            </p>
-          </div>
-        </div>
-      </div>
-
+      <ProfileHeader 
+        profile={{
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: profile.role,
+          bio: profile.bio,
+          profile_picture_url: profile.profile_picture_url,
+          join_date: profile.join_date,
+          currentUserId: user?.id // From your auth context
+        }}
+        canEdit={true}
+        onUpdate={handleProfileUpdate}
+      />
       {/* Activity Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">

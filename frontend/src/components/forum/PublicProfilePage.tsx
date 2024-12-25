@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { MessageSquare, Clock } from 'lucide-react';
-
+import { ProfileHeader } from './ProfileHeader';
 // Updated type to match actual API response
 type PublicUserProfile = {
   id: number;
@@ -16,6 +16,8 @@ type PublicUserProfile = {
     color: string;
   };
   join_date: string;
+  profile_picture_url: string;
+  bio: string;
   stats: {
     total_threads: number;
     total_replies: number;
@@ -83,30 +85,20 @@ export const PublicProfilePage = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-            <span className="text-2xl text-gray-600">
-              {profile.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2 text-black">
-              {profile.name}
-              <span 
-                className="px-2 py-1 text-sm rounded text-white"
-                style={{ backgroundColor: profile.role.color }}
-              >
-                {profile.role.name}
-              </span>
-            </h1>
-            <p className="text-gray-500">
-              Member since {new Date(profile.join_date).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-      </div>
-
+      <ProfileHeader 
+        profile={{
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: profile.role,
+          bio: profile.bio,
+          profile_picture_url: profile.profile_picture_url,
+          join_date: profile.join_date,
+          currentUserId: userId, // From your auth context
+        }}
+        canEdit={false}
+        onUpdate={() => {}}
+      />
       {/* Activity Overview */}
       <div className="grid text-black grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Threads */}

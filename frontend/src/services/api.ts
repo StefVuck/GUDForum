@@ -16,6 +16,12 @@ type RegisterResponse = {
   verify_token?: string; // Only in development
 };
 
+type ProfileUpdateData = {
+  bio?: string;
+  profile_picture_url?: string;
+};
+
+
 type PublicUserProfile = {
   ID: number;
   name: string;
@@ -109,6 +115,12 @@ export const api = {
     });
     return response; // Return the parsed response (includes updated user)
   },
+
+  updateProfile: (data: ProfileUpdateData) => 
+    fetchApi('/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   // Get all threads for a section
   getThreads: (section: string) => 
