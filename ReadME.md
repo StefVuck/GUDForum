@@ -18,8 +18,10 @@ docker-compose up --build
 
 If for some reason docker isnt an option, please refer to [Dockerless Guide](https://github.com/StefVuck/GUDForum/blob/main/Dockerless.md)
 
-# Demonstration (Outdated)
-![image](https://github.com/user-attachments/assets/8d4b0faa-2642-4a43-bfec-61a774975893)
+# Demonstration 
+![image](https://github.com/user-attachments/assets/0bbf7b05-cdef-46e2-a880-221c5a8e9f2c)
+![image](https://github.com/user-attachments/assets/e8e9abac-f53d-4c43-96c4-51cf0e9c57c6)
+
 
 ## Registration Funcitonality
 ![image](https://github.com/user-attachments/assets/52c18330-bcb1-44c7-a1b4-f561775c43f5)
@@ -29,20 +31,55 @@ In production, users must verify their token received in their email in order to
 
 ## Search Functionality
 #### Basic Search
-![image](https://github.com/user-attachments/assets/136c6eab-12f7-45d3-a75b-a53c61bc4d59)
+![image](https://github.com/user-attachments/assets/25f7a58e-8ab8-44e7-938c-94200ea9816a)
 
 #### Advanced Search
-![image](https://github.com/user-attachments/assets/42f262f5-1d61-4d8a-9233-c3fae5f7306e)
-![image](https://github.com/user-attachments/assets/83ad7537-877a-47ec-aeb8-f9a54e345dc0)
+![image](https://github.com/user-attachments/assets/dc20706f-d2dc-4d28-a0d8-2d4666853a0e)
+![image](https://github.com/user-attachments/assets/8f9a6efd-f945-44e5-b636-e27e1d6883a8)
+
 
 ## Thread Creation
+(old demonstration, still applies)
 ![image](https://github.com/user-attachments/assets/120973b6-b49f-4369-bc18-4547062b723f)
 ![image](https://github.com/user-attachments/assets/28a4f801-f690-4b3a-bdd2-8c10ea80d73c)
 ![image](https://github.com/user-attachments/assets/710f6a63-57e6-4ac2-81ed-544d2514b09e)
 ![image](https://github.com/user-attachments/assets/209ffaeb-e131-454e-b717-fba55e3b431c)
 
 ## Reply Creation
-![image](https://github.com/user-attachments/assets/557e944a-90bf-4624-9eb2-028e7c9205b9)
+![image](https://github.com/user-attachments/assets/54ba0d71-9459-483c-a440-f1fa38f8d07f)
+
+We can also see that every user is clickable, leading to the public profile page:
+## Profile Pages
+
+
+### Public Page
+![image](https://github.com/user-attachments/assets/7caaf9b4-3f65-4cb4-9ba6-8039c17e587e)
+![image](https://github.com/user-attachments/assets/59757855-e06f-46ff-984a-a0e00519c691)
+
+
+### Private Page
+Corresponding Private Page for Admin
+![image](https://github.com/user-attachments/assets/fa490c63-d943-4f84-9b98-a3ccc1dd8ddd)
+On Edit:
+
+![image](https://github.com/user-attachments/assets/abd2c16d-1ec3-40bc-a499-c013375b4481)
+
+## Admin Portal
+For admin users, an extra option is present:
+
+![image](https://github.com/user-attachments/assets/5a369ce6-ad95-4c72-95e4-576cf388be72)
+
+Which leads to:
+![image](https://github.com/user-attachments/assets/84cbed2c-4505-4bee-be11-2841e0ef3de9)
+![image](https://github.com/user-attachments/assets/8262d3da-9b85-40f5-9fd6-94d5c1aed809)
+![image](https://github.com/user-attachments/assets/90964bd1-9a4e-45ed-a93d-cbeda05e5784)
+![image](https://github.com/user-attachments/assets/2286a43b-a183-4946-a6a4-62a64d224bc9)
+
+
+## 404/Unauthorised Page
+![image](https://github.com/user-attachments/assets/d7e8257b-ef3b-484e-b51b-dc7004b0633d)
+
+
 
 
 # Structure 
